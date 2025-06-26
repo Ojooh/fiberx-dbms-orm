@@ -1,5 +1,5 @@
 const { randomUUID }    = require('crypto');
-const { createPool }    = require("mysql2/promise");
+const { createPool, createConnection }    = require("mysql2/promise");
 const LoggerUtil        = require("../../utils/logger_util");
 
 class MysqlDatasourceConnector {
@@ -8,6 +8,31 @@ class MysqlDatasourceConnector {
         this.options        = options;
         this.logger         = logger || new LoggerUtil(this.name);
         this.connector_pool = null;
+    }
+
+    // Method to find or create database
+    findOrCreateDb = async (config) => {
+        try {
+            const { host, port, username, password, database, collation, charset } = this.options;
+            const connection = await createConnection({ host, port, user: username, password});
+
+            const [rows] = await connection.query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [database]);
+
+            if (rows.length === 0) {
+				this.logger.info(`[${this.name}] Database '${database}' does not exist. Creating...`);
+                const query = this.#generateCreateDatabaseQuery(database, collation, charset);
+				await connection.query(query);
+				this.logger.info(`[${this.name}]  Database '${database}' created successfully.`);
+                return true
+			} 
+            
+            this.logger.info(`[${this.name}] Database '${database}' already exists.`);
+            return true
+        }
+        catch (error) {
+            this.logger.error(`❌ [${this.name}] Failed to findOrCreateDb`, { config, error });
+            throw error;
+        }
     }
 
     // 👉 Establish connection to MySQL
@@ -22,6 +47,8 @@ class MysqlDatasourceConnector {
                 host, port, user, password, database, connectionLimit, idleTimeout,
                 waitForConnections: true, maxIdle: 5, queueLimit: 0
             };
+
+            this.findOrCreateDb(pool_config_obj);
 
             this.connector_pool = createPool(pool_config_obj);
             this.logger.info(`✅ [${this.name}] Connection to MySQL established successfully`);
@@ -133,6 +160,20 @@ class MysqlDatasourceConnector {
             throw error;
         }
     }
+
+    // Method to generate create database query
+    #generateCreateDatabaseQuery = (database, collation = "", charset = "") => {
+        if (!/^[a-zA-Z0-9_]+$/.test(database)) {
+            throw new Error("Invalid database name");
+        }
+        
+        let query = `CREATE DATABASE \`${database}\``;
+        if (collation) { query += ` COLLATE ${collation}`; }
+        if (charset) { query += ` CHARACTER SET ${charset}`; }
+        return query;
+
+    }
+
 }
 
 module.exports = MysqlDatasourceConnector;

@@ -10,6 +10,31 @@ class PostgresDatasourceConnector {
         this.connector_pool = null;
     }
 
+    // Method to find or create database
+    findOrCreateDb = async (config) => {
+        try {
+            const { host, port, username, password, database, collation, charset } = this.options;
+            const connection = await createConnection({ host, port, user, password, database: "postgres" });
+
+            const result = await connection.query( "SELECT 1 FROM pg_database WHERE datname = $1",[database]);
+
+            if (result?.rowCount === 0) {
+                this.logger.info(`[${this.name}] Database '${database}' does not exist. Creating...`);
+                const query = this.#generateCreateDatabaseQuery(database, collation, charset);
+                await connection.query(query);
+                this.logger.info(`[${this.name}]  Database '${database}' created successfully.`);
+                return true
+            } 
+            
+            this.logger.info(`[${this.name}] Database '${database}' already exists.`);
+            return true
+        }
+        catch (error) {
+            this.logger.error(`❌ [${this.name}] Failed to findOrCreateDb`, { config, error });
+            throw error;
+        }
+    }
+
     // 👉 Establish connection to PostgreSQL
     connect = async () => {
         try {
@@ -22,6 +47,8 @@ class PostgresDatasourceConnector {
                 host, port, user, password, database, max, idleTimeoutMillis,
                 connectionTimeoutMillis: 5000,
             };
+
+            this.findOrCreateDb(pool_config_obj);
 
             this.connector_pool = new Pool(pool_config_obj);
             this.logger.info(`🐘 [${this.name}] Connected to PostgreSQL successfully`);
@@ -124,6 +151,22 @@ class PostgresDatasourceConnector {
             throw error;
         }
     };
+
+    // Method to generate create database query
+    #generateCreateDatabaseQuery = (database, collation = "", charset = "") => {
+        if (!/^[a-zA-Z0-9_]+$/.test(database)) {
+            throw new Error("Invalid database name");
+        }
+        
+        let query = `CREATE DATABASE \`${database}\``;
+
+        if (charset) { query += ` ENCODING '${encoding}`; }
+
+        if (collation) { query += ` LC_COLLATE='${lc_collate}`; }
+
+
+        return query;
+    }
 }
 
 module.exports = PostgresDatasourceConnector;
