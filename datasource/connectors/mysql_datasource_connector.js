@@ -13,8 +13,8 @@ class MysqlDatasourceConnector {
     // Method to find or create database
     findOrCreateDb = async (config) => {
         try {
-            const { host, port, username, password, database, collation, charset } = this.options;
-            const connection = await createConnection({ host, port, user: username, password});
+            const { host, port, user, password, database, collation, charset } = this.options;
+            const connection = await createConnection({ host, port, user, password});
 
             const [rows] = await connection.query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", [database]);
 
@@ -48,7 +48,7 @@ class MysqlDatasourceConnector {
                 waitForConnections: true, maxIdle: 5, queueLimit: 0
             };
 
-            this.findOrCreateDb(pool_config_obj);
+            await this.findOrCreateDb(pool_config_obj);
 
             this.connector_pool = createPool(pool_config_obj);
             this.logger.info(`✅ [${this.name}] Connection to MySQL established successfully`);

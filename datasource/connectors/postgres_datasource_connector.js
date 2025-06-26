@@ -13,7 +13,7 @@ class PostgresDatasourceConnector {
     // Method to find or create database
     findOrCreateDb = async (config) => {
         try {
-            const { host, port, username, password, database, collation, charset } = this.options;
+            const { host, port, user, password, database, collation, charset } = this.options;
             const connection = await createConnection({ host, port, user, password, database: "postgres" });
 
             const result = await connection.query( "SELECT 1 FROM pg_database WHERE datname = $1",[database]);
@@ -48,7 +48,7 @@ class PostgresDatasourceConnector {
                 connectionTimeoutMillis: 5000,
             };
 
-            this.findOrCreateDb(pool_config_obj);
+            await this.findOrCreateDb(pool_config_obj);
 
             this.connector_pool = new Pool(pool_config_obj);
             this.logger.info(`🐘 [${this.name}] Connected to PostgreSQL successfully`);
