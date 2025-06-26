@@ -1,0 +1,43 @@
+{
+  "name": "fiberx-dbms-orm-orm",
+  "version": "0.2.1",
+  "description": "FiberX DBMS ORM - A lightweight ORM and query builder supporting MySQL and PostgreSQL for now",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write ."
+  },
+  "keywords": [
+    "orm",
+    "query-builder",
+    "mysql",
+    "postgres",
+    "dbms",
+    "fiberx",
+    "database",
+    "nodejs"
+  ],
+  "author": "FiberX Innovations LTD.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fiberx-innovations/fiberx-dbms-orm"
+  },
+  "bugs": {
+    "url": "https://github.com/fiberx-innovations/fiberx-dbms-orm/issues"
+  },
+  "homepage": "https://github.com/fiberx-innovations/fiberx-dbms-orm#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "mysql2": "^3.14.1",
+    "pg": "^8.15.6"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  }
+}
