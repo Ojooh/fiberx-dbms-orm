@@ -1,27 +1,30 @@
 // app.js (fiberx entry point)
 
 // === DataTypes for Schema Definitions ===
-const DataTypes                 = require('./datatype');
+const DataTypes                 = require("./datatype");
 
 // === Core DataSource Management ===
-const DataSourceRegistry        = require('./datasource/registry/datasource_registry');
-const DataSourceConnectorMapper = require('./datasource/mapper/datasource_connector_mapper');
+const DataSourceRegistry        = require("./datasource/registry/datasource_registry");
+const DataSourceConnectorMapper = require("./datasource/mapper/datasource_connector_mapper");
 
 
 // === Base Models ===
-const SQLBaseModel              = require('./model/base/sql_base_model');
-const NoSQLBaseModel            = require('./model/base/nosql_base_model');
-const BaseModelMapper           = require('./model/mapper/base_model_mapper');
+const SQLBaseModel              = require("./model/base/sql_base_model");
+const NoSQLBaseModel            = require("./model/base/nosql_base_model");
+const BaseModelMapper           = require("./model/mapper/base_model_mapper");
 
 // === Query Builders ===
-const BaseQueryBuilder          = require('./query_builder/builder/base_query_builder');
-const QueryBuilderMapper        = require('./query_builder/mapper/query_builder_mapper');
-const QueryUtilMapper           = require('./query_builder/mapper/query_util_mapper');
+const BaseQueryBuilder          = require("./query_builder/builder/base_query_builder");
+const QueryBuilderMapper        = require("./query_builder/mapper/query_builder_mapper");
+const QueryUtilMapper           = require("./query_builder/mapper/query_util_mapper");
 
 // === Utilities ===
-const LoggerUtil                = require('./utils/logger_util');
-const EventSystemUtil           = require('./utils/event_system_util');
-const GlobalVariableManager     = require('./utils/global_variable_manager');
+const LoggerUtil                = require("./utils/logger_util");
+const EventSystemUtil           = require("./utils/event_system_util");
+const GlobalVariableManager     = require("./utils/global_variable_manager");
+
+// === Scripts ===
+const SQLModelGenerator        = require("./scripts/sql_model_content_generator");
 
 // === Fiberx Main Interface ===
 const Fiberx = {
@@ -37,6 +40,7 @@ const Fiberx = {
   LoggerUtil,
   EventSystemUtil,
   GlobalVariableManager,
+  SQLModelGenerator
 };
 
 module.exports = Fiberx;
