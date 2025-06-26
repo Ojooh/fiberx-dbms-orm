@@ -144,5 +144,4 @@ MIT © [FiberX Innovations LTD.](https://github.com/fiberx-innovations)
 * Report bugs: [GitHub Issues](https://github.com/fiberx-innovations/fiberx-dbms-orm/issues)
 * Email: [support@fiberxinnovationc.com](mailto:support@fiberxinnovationc.com) *(example email)*
 
-```
 
