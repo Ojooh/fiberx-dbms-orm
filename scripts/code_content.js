@@ -35,7 +35,7 @@ class ${class_name}Model extends BaseModel {
 const initialMigrationContent = (model_name, column_names, index_names) => {
     return `
 const { QueryBuilderMapper } = require("fiberx-dbms-orm");
-const ${model_name}Schema    = require("../../schemas/app_schemas");
+const { ${model_name}Schema }    = require("../../schemas/app_schemas");
 
 class ${model_name}InitialMigration {
     constructor(database_manager, logger = null) {
@@ -45,13 +45,11 @@ class ${model_name}InitialMigration {
             columns: ${JSON.stringify(column_names)},
             indexes: ${JSON.stringify(index_names)},
             timestamp: "${new Date().toISOString()}",
-            schema_name: "${schema_name}",
-            datasource_name: "${model_name}Schema.datasource_name",
-            datasource_type: "${model_name}Schema?.datasource_type",
+            schema_name: ${model_name}Schema?.name,
         };
 
-        this.connector          = this.datbase_manager.getRegistredDataSource(this.metadata?.datasource_name);
-        this.QueryBuilderClass  = QueryBuilderMapper(this.metadata?.datasource_type, this.logger);
+        this.connector          = this.datbase_manager.getRegistredDataSource(${model_name}Schema?.datasource_name);
+        this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
     }
 
@@ -88,7 +86,7 @@ module.exports = ${model_name}InitialMigration;
 const deltaMigrationContent = (model_name, added_cols, added_indx, removed_cols, removed_indx) => {
     return `
 const { QueryBuilderMapper } = require("fiberx-dbms-orm");
-const ${model_name}Schema    = require("../../schemas/app_schemas");
+const { ${model_name}Schema }    = require("../../schemas/app_schemas");
 
 class ${model_name}DeltaMigration {
     constructor(database_manager, logger = null) {
@@ -98,13 +96,11 @@ class ${model_name}DeltaMigration {
             columns: ${JSON.stringify(added_cols)},
             indexes: ${JSON.stringify(added_indx)},
             timestamp: "${new Date().toISOString()}",
-            schema_name: "${schema_name}",
-            datasource_name: "${model_name}Schema.datasource_name",
-            datasource_type: "${model_name}Schema?.datasource_type",
+            schema_name: ${model_name}Schema?.name,
         };
 
-        this.connector          = this.datbase_manager.getRegistredDataSource(this.metadata?.datasource_name);
-        this.QueryBuilderClass  = QueryBuilderMapper(this.metadata?.datasource_type, this.logger);
+        this.connector          = this.datbase_manager.getRegistredDataSource(${model_name}Schema?.datasource_name);
+        this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
         this.added_cols         = ${JSON.stringify(added_cols)};
         this.removed_cols       = ${JSON.stringify(removed_cols)};
