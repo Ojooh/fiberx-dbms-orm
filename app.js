@@ -25,6 +25,7 @@ const GlobalVariableManager     = require("./utils/global_variable_manager");
 
 // === Scripts ===
 const SQLModelGenerator        = require("./scripts/sql_model_content_generator");
+const MigrationContentGenerator= require("./scripts/migration_content_generator");
 
 // === Fiberx Main Interface ===
 const Fiberx = {
@@ -40,7 +41,8 @@ const Fiberx = {
   LoggerUtil,
   EventSystemUtil,
   GlobalVariableManager,
-  SQLModelGenerator
+  SQLModelGenerator,
+  MigrationContentGenerator
 };
 
 module.exports = Fiberx;
