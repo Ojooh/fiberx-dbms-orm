@@ -178,7 +178,7 @@ module.exports = ${model_name}DeltaMigration;
 }
 
 const seederContent = (model_name, seeder_name = null, file_name = null, seed_data_sample = {}) => {
-    const class_name     = seeder_name || `${model_name}Seeder`;
+    const class_name     = `${model_name}Seeder`;
     const schema_name    = `${model_name}Schema`;
     const model_ref      = `${model_name}Model`;
     const log_file_name   = file_name || `${class_name}.js`;
