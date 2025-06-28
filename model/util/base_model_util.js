@@ -65,7 +65,7 @@ class BaseModelUtil {
 
     // method to validate db permission
     validatePermission = (action) => {
-        const app_id = this.global_vars.get("APP_ID"); // If this is how it's set
+        const app_id = this.global_vars.getVariable("APP_ID"); // If this is how it's set
         if (!this.permissions.includes(action)) {
             const msg = `[${this.name}] Permission denied: ${action} not allowed on model ${this.model_name} for app ${app_id}.`;
             this.logger.error(msg);
@@ -182,7 +182,7 @@ class BaseModelUtil {
 
     #getQueryMethod = (query_method_name) => {
         const query_builder = this.getQueryBuilder();
-        const queryMethod   = query_builder?.[query_method_name]
+        const queryMethod = query_builder?.[query_method_name]?.bind(query_builder);
 
         if (typeof queryMethod !== 'function') {
             const msg = `[${this.name}] Query method '${query_method_name}' not found on query builder`;

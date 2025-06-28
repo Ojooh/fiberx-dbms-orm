@@ -82,7 +82,7 @@ class BaseQueryBuilder {
         try {
             const { data }              = query_params;
             const escaped_table_name    = this.query_util.escapeField(this.table_name);
-            const columns               = Object.keys(data).map(this.query_util.escapeField).join(', ');
+            const columns               = Object.keys(data).map(field => this.query_util.escapeField(field)).join(', ');
             const values                = Object.values(data).map(this.query_util.escapeValue).join(', ');
 
 
@@ -111,7 +111,7 @@ class BaseQueryBuilder {
             const escaped_table_name    = this.query_util.escapeField(this.table_name);
             const first_row             = data_array[0];
             const data_columns          = Object.keys(first_row).filter(key => Object.hasOwn(this.table_columns, key));
-            const cols                  = data_columns.map(this.query_util.escapeField).join(', ');
+            const cols                  = data_columns.map(field => this.query_util.escapeField(field)).join(', ');
             const value_tuples          = data_array.map(row => {
                 const row_values = data_columns.map(col => this.query_util.escapeValue(row[col]));
                 return `(${row_values.join(', ')})`;
@@ -231,7 +231,7 @@ class BaseQueryBuilder {
             const column_sql_parts  = [];
             const triggers          = [];
 
-            const pk                    = primary_key ? `, PRIMARY KEY (${(Array.isArray(primary_key) ? primary_key : [primary_key]).map(this.query_util.escapeField).join(', ')})` : '';
+            const pk                    = primary_key ? `, PRIMARY KEY (${(Array.isArray(primary_key) ? primary_key : [primary_key]).map(field => this.query_util.escapeField(field)).join(', ')})` : '';
             const escaped_table_name    = this.query_util.escapeField(this.table_name);
 
             for (const [col, def] of Object.entries(columns)) {
@@ -319,7 +319,7 @@ class BaseQueryBuilder {
     createIndex (index_fields, unique) {
         try {
             const escaped_table_name    = this.query_util.escapeField(this.table_name);
-            const fields                = index_fields.map(this.query_util.escapeField).join(', ');
+            const fields                = index_fields.map(field => this.query_util.escapeField(field)).join(', ');
             const index_name            = `idx_${this.table_name}_${index_fields.join('_')}`;
             const escaped_index_name    = this.query_util.escapeField(index_name);
             const unique_clause         = unique ? 'UNIQUE' : '';

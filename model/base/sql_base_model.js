@@ -362,6 +362,7 @@ class SQLBaseModel extends BaseModel {
     }
 
     constructor(data = {}) {
+        super(data);
         Object.assign(this, data); // Assign data to instance properties
     }
 }
