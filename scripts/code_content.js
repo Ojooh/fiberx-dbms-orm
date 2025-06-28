@@ -203,7 +203,7 @@ class ${class_name} {
     getModelSeedData = () => {
         return [
             // Example seed data
-            ${JSON.stringify(seed_data_sample)}
+            ${JSON.stringify(seed_data_sample, null, 4)}
         ];
     }
 
