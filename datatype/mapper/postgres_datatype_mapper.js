@@ -63,6 +63,7 @@ class PostgresDatatypeMapper {
 
             // Date & Time
             case "DATE":
+            case "DATETIME":
                 return "TIMESTAMP";
 
             case "DATEONLY":

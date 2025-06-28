@@ -72,6 +72,7 @@ class MysqlDatatypeMapper {
 
             // Date & Time
             case "DATE":
+            case "DATETIME":
                 return "DATETIME";
 
             case "DATEONLY":
