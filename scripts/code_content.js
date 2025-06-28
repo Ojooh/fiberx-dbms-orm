@@ -5,31 +5,31 @@ const { SQLBaseModel: BaseModel }   = require("fiberx-dbms-orm");
 const { ${class_name}Schema }       = require("../schemas/app_schemas");
 
 class ${class_name}Model extends BaseModel {
-        // Define your schema here
-        static schema = ${class_name}Schema;
+    // Define your schema here
+    static schema = ${class_name}Schema;
 
-        #raw;
+    #raw;
 
-        constructor(data = {}) {
-            super(data);
-            this.#raw = data;
-            this.addComputedAttributes();
-        }
-
-        // Method to get app computed attributes object
-        getComputedAttributes = () => { return {}; };
-
-        // Method to add computed attributes to the model
-        addComputedAttributes = () => {
-            const computed_attributes = this.getComputedAttributes();
-            for (const [key, value] of Object.entries(computed_attributes)) {
-                this[key] = value;
-            }
-        };
+    constructor(data = {}) {
+        super(data);
+        this.#raw = data;
+        this.addComputedAttributes();
     }
 
-    module.exports = ${class_name}Model;
-    `;
+    // Method to get app computed attributes object
+    getComputedAttributes = () => { return {}; };
+
+    // Method to add computed attributes to the model
+    addComputedAttributes = () => {
+        const computed_attributes = this.getComputedAttributes();
+        for (const [key, value] of Object.entries(computed_attributes)) {
+            this[key] = value;
+        }
+    };
+}
+
+module.exports = ${class_name}Model;
+`;
 } 
 
 const initialMigrationContent = (model_name, column_names, index_names) => {
