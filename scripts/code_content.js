@@ -126,14 +126,14 @@ class ${model_name}DeltaMigration {
         }
     }
 
-    dropColumns = (col_names) => {
+    dropColumns = async (col_names) => {
         for (const col_name of col_names) {
             const query = this.query_builder.dropColumn(col_name);
             await this.connector.executeQuery(query);
         }
     }
 
-    addNewIndexes = (index_names) => {
+    addNewIndexes = async (index_names) => {
         for (const index_name of index_names) {
             const index_obj = this.all_indexes.find(obj => obj?.name === index_name);
 
