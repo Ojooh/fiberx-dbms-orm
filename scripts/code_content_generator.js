@@ -48,6 +48,13 @@ class CodeContentGenerator {
         return true;
     }
 
+    // Generate model content as a string
+    generateModelContent = (model_name) => {
+        const class_name = this.toPascalCase(model_name);
+
+        return modelCodeContent(class_name)
+    }
+
     // Method to Generate initial migration content
     generateInitialMigrationContent = (model_name, column_names, index_names) => {
         const class_model_name = this.toPascalCase(model_name);
