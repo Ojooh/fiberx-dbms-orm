@@ -177,10 +177,83 @@ module.exports = ${model_name}DeltaMigration;
 `
 }
 
+const seederContent = (model_name, seeder_name = null, file_name = null, seed_data_sample = {}) => {
+    const class_name     = seeder_name || `${model_name}Seeder`;
+    const schema_name    = `${model_name}Schema`;
+    const model_ref      = `${model_name}Model`;
+    const log_file_name   = file_name || `${class_name}.js`;
+
+    return `
+const { QueryBuilderMapper }    = require("fiberx-dbms-orm");
+const { ${schema_name} }         = require("../../schemas/app_schemas");
+
+class ${class_name} {
+    constructor(database_manager, logger = null) {
+        this.database_manager   = database_manager;
+        this.ENV                = database_manager?.ENV;
+        this.helper             = database_manager?.helper;
+        this.logger             = logger;
+        this.connector          = this.database_manager.getRegistredDataSource(${schema_name}?.datasource_name);
+        this.QueryBuilderClass  = QueryBuilderMapper(${schema_name}?.datasource_type, this.logger);
+        this.query_builder      = new this.QueryBuilderClass(${schema_name}, [], this.logger);
+        this.model              = this.database_manager?.${model_ref};
+    }
+
+    // Define seed data here
+    getModelSeedData = () => {
+        return [
+            // Example seed data
+            ${JSON.stringify(seed_data_sample)}
+        ];
+    }
+
+    up = async () => {
+        try {
+            const seeder_data   = this.getModelSeedData();
+            const seeded        = await this.model.bulkCreate(seeder_data, { ignore_duplicates: true });
+
+            if (!seeded || !seeded.length) {
+                this.logger?.error("🚫 Error seeding the database.");
+                throw new Error("Seeding failed.");
+            }
+
+            this.logger?.info(\`🌱 Seeded \${seeder_data.length} rows into model "${model_name}" from file "${log_file_name}"\`);
+        } catch (error) {
+            this.logger?.error("🚫 Error in up method", { error });
+            throw error;
+        }
+    }
+
+    down = async () => {
+        try {
+            const seeder_data   = this.getModelSeedData();
+            const ids           = seeder_data.map(item => item?.id).filter(Boolean);
+
+            if (!ids.length) {
+                this.logger?.info("⚠️ No IDs found for rollback.");
+                return;
+            }
+
+            const deleted = await this.model.destroy({ id: ids });
+
+            this.logger?.info(\`🧹 Rolled back \${deleted} seeded rows from model "${this.model?.model}"\`);
+        } catch (error) {
+            this.logger?.error("🚫 Error in down method", { error });
+            throw error;
+        }
+    }
+}
+
+module.exports = ${class_name};
+`;
+};
+
+
 module.exports = {
     modelCodeContent,
     initialMigrationContent,
-    deltaMigrationContent
+    deltaMigrationContent,
+    seederContent
 }
 
 
