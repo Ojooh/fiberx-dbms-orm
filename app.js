@@ -24,7 +24,7 @@ const EventSystemUtil           = require("./utils/event_system_util");
 const GlobalVariableManager     = require("./utils/global_variable_manager");
 
 // === Scripts ===
-const CodeContentGenerator      = require("./scripts/code_content");
+const CodeContentGenerator      = require("./scripts/code_content_generator");
 
 // === Fiberx Main Interface ===
 const Fiberx = {
