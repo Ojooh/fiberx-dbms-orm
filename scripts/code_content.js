@@ -189,7 +189,7 @@ const { ${schema_name} }         = require("../../schemas/app_schemas");
 
 class ${class_name} {
     constructor(database_manager, logger = null) {
-        this.name               = "${snake_seeder_name}";
+        this.name               = "${snake_seeder_name}_seeder";
         this.database_manager   = database_manager;
         this.ENV                = database_manager?.ENV;
         this.helper             = database_manager?.helper;
