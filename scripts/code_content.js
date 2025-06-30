@@ -197,7 +197,7 @@ class ${class_name} {
         this.connector          = this.database_manager.getRegistredDataSource(${schema_name}?.datasource_name);
         this.QueryBuilderClass  = QueryBuilderMapper(${schema_name}?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${schema_name}, [], this.logger);
-        this.model              = this.database_manager?.${model_ref};
+        this.model              = this.database_manager?.models?.${model_ref};
     }
 
     // Define seed data here

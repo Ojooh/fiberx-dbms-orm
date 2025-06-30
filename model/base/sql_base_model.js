@@ -211,7 +211,7 @@ class SQLBaseModel extends BaseModel {
         try { 
             const { table_name } = this.schema;
 
-            const { ignore_duplicates = true, include: [] } = options;
+            const { ignore_duplicates = true, include = [] } = options;
 
             this.model_util.validatePermission("create");
 
