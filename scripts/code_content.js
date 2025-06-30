@@ -2,7 +2,7 @@
 const modelCodeContent = (class_name) => {
     return`
 const { SQLBaseModel: BaseModel }   = require("fiberx-dbms-orm");
-const { ${class_name}Schema }       = require("../schemas/app_schemas");
+const { ${class_name}Schema }       = require("../../schemas/app_schemas");
 
 class ${class_name}Model extends BaseModel {
     // Define your schema here
