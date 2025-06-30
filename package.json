@@ -1,6 +1,6 @@
 {
   "name": "fiberx-dbms-orm-orm",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "description": "FiberX DBMS ORM - A lightweight ORM and query builder supporting MySQL and PostgreSQL for now",
   "main": "app.js",
   "scripts": {

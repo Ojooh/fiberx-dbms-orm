@@ -69,8 +69,10 @@ class CodeContentGenerator {
 
     // Method to Generate seeder content
     generateSeederContent = (model_name, seeder_name = null, file_name = null, seed_data_sample = {}) => {
-        const class_model_name = this.toPascalCase(model_name);
-        return seederContent(class_model_name, seeder_name, file_name, seed_data_sample);
+        const class_model_name      = this.toPascalCase(model_name);
+        const pascal_seeder_name    = this.toPascalCase(seeder_name);
+        const snake_seeder_name     = this.toSnakeCase(seeder_name)
+        return seederContent(class_model_name, pascal_seeder_name, snake_seeder_name, file_name, seed_data_sample);
     }
 
     // Method to Ensure output directory exists
