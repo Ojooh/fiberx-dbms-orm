@@ -177,8 +177,8 @@ module.exports = ${model_name}DeltaMigration;
 `
 }
 
-const seederContent = (model_name, seeder_name = null, file_name = null, seed_data_sample = {}) => {
-    const class_name     = `${model_name}Seeder`;
+const seederContent = (model_name, pascal_seeder_name = null, snake_seeder_name = null, file_name = null, seed_data_sample = {}) => {
+    const class_name     = `${pascal_seeder_name}Seeder`;
     const schema_name    = `${model_name}Schema`;
     const model_ref      = `${model_name}Model`;
     const log_file_name   = file_name || `${class_name}.js`;
@@ -189,6 +189,7 @@ const { ${schema_name} }         = require("../../schemas/app_schemas");
 
 class ${class_name} {
     constructor(database_manager, logger = null) {
+        this.name               = "${snake_seeder_name}";
         this.database_manager   = database_manager;
         this.ENV                = database_manager?.ENV;
         this.helper             = database_manager?.helper;
@@ -210,16 +211,22 @@ class ${class_name} {
     up = async () => {
         try {
             const seeder_data   = this.getModelSeedData();
+
+            if (!seeder_data || !seeder_data.length) {
+                this.logger?.error(\`[\${this.name}] 🚫 Error seeding the database no data to seed \${seeder_data}.\`);
+                return;
+            }
+
             const seeded        = await this.model.bulkCreate(seeder_data, { ignore_duplicates: true });
 
             if (!seeded || !seeded.length) {
-                this.logger?.error("🚫 Error seeding the database.");
+                this.logger?.error(\`[\${this.name}] 🚫 Error seeding the database.\`);
                 throw new Error("Seeding failed.");
             }
 
-            this.logger?.info(\`🌱 Seeded \${seeder_data.length} rows into model "${model_name}" from file "${log_file_name}"\`);
+            this.logger?.info(\`[\${this.name}] 🌱 Seeded \${seeder_data.length} rows into model "${model_name}" from file "${log_file_name}"\`);
         } catch (error) {
-            this.logger?.error("🚫 Error in up method", { error });
+            this.logger?.error(\`[\${this.name}] 🚫 Error in up method\`, { error });
             throw error;
         }
     }
@@ -227,18 +234,24 @@ class ${class_name} {
     down = async () => {
         try {
             const seeder_data   = this.getModelSeedData();
+
+            if (!seeder_data || !seeder_data.length) {
+                this.logger?.error(\`[\${this.name}] 🚫 Error seeding the database no data to seed \${seeder_data}.\`);
+                return;
+            }
+
             const ids           = seeder_data.map(item => item?.id).filter(Boolean);
 
             if (!ids.length) {
-                this.logger?.info("⚠️ No IDs found for rollback.");
+                this.logger?.info(\`[\${this.name}] ⚠️ No IDs found for rollback.\`);
                 return;
             }
 
             const deleted = await this.model.destroy({ id: ids });
 
-            this.logger?.info(\`🧹 Rolled back \${deleted} seeded rows from model "${this.model?.model}"\`);
+            this.logger?.info(\`[\${this.name}] 🧹 Rolled back \${deleted} seeded rows from model "${this.model?.model}"\`);
         } catch (error) {
-            this.logger?.error("🚫 Error in down method", { error });
+            this.logger?.error(\`[\${this.name}] 🚫 Error in up method\`, { error });
             throw error;
         }
     }
