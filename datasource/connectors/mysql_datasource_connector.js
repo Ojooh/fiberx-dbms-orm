@@ -1,13 +1,18 @@
 const { randomUUID }    = require('crypto');
 const { createPool, createConnection }    = require("mysql2/promise");
-const LoggerUtil        = require("../../utils/logger_util");
+
+
+const LoggerUtil            = require("../../utils/logger_util");
+const MysqlDbUserManager    = require("../user_access_control/mysql_db_user_manager");
 
 class MysqlDatasourceConnector {
     constructor(options, logger = null) {
-        this.name           = "mysql_datasource_connector";
-        this.options        = options;
-        this.logger         = logger || new LoggerUtil(this.name);
-        this.connector_pool = null;
+        this.name               = "mysql_datasource_connector";
+        this.options            = options;
+        this.connector_pool     = null;
+
+        this.logger             = logger || new LoggerUtil(this.name);
+        this.db_user_manager    = new MysqlDbUserManager(this.connector_pool, this.options, this.logger);
     }
 
     // Method to find or create database
@@ -50,7 +55,9 @@ class MysqlDatasourceConnector {
 
             await this.findOrCreateDb(pool_config_obj);
 
-            this.connector_pool = createPool(pool_config_obj);
+            this.connector_pool                     = createPool(pool_config_obj);
+            this.this.db_user_manager.connector     = this.connector_pool;
+
             this.logger.info(`✅ [${this.name}] Connection to MySQL established successfully`);
             return this.connector_pool;
         } catch (error) {

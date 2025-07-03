@@ -1,13 +1,18 @@
 const { randomUUID }    = require('crypto');
 const { Pool }          = require('pg');
-const LoggerUtil        = require("../../utils/logger_util");
+
+
+const LoggerUtil            = require("../../utils/logger_util");
+const PostgresDbUserManager = require("../user_access_control/postgres_db_user_manager");
 
 class PostgresDatasourceConnector {
     constructor(options, logger = null) {
-        this.name           = "postgres_datasource_connector";
-        this.options        = options;
-        this.logger         = logger || new LoggerUtil(this.name);
-        this.connector_pool = null;
+        this.name               = "postgres_datasource_connector";
+        this.options            = options;
+        this.connector_pool     = null;
+
+        this.logger             = logger || new LoggerUtil(this.name);
+        this.db_user_manager    = new PostgresDbUserManager(this.connector_pool, this.options, this.logger);
     }
 
     // Method to find or create database
