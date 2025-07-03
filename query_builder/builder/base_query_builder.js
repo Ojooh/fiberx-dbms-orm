@@ -11,7 +11,7 @@ class BaseQueryBuilder {
 
         this.logger             = logger || new LoggerUtil(this.name);
         this.QueryUtil          = QueryUtilMapper(dialect, logger);
-        this.query_util         = new this.QueryUtil(dialect, schema, associations, this.logger);
+        this.query_util         = new this.QueryUtil(schema, associations, this.logger);
     }
 
     // Method to generate a SELECT query
