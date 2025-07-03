@@ -55,7 +55,9 @@ class PostgresDatasourceConnector {
 
             await this.findOrCreateDb(pool_config_obj);
 
-            this.connector_pool = new Pool(pool_config_obj);
+            this.connector_pool                 = new Pool(pool_config_obj);
+            this.db_user_manager.connector     = this.connector_pool;
+
             this.logger.info(`🐘 [${this.name}] Connected to PostgreSQL successfully`);
             return this.connector_pool;
         } catch (error) {

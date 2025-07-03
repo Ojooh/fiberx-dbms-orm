@@ -56,7 +56,7 @@ class MysqlDatasourceConnector {
             await this.findOrCreateDb(pool_config_obj);
 
             this.connector_pool                     = createPool(pool_config_obj);
-            this.this.db_user_manager.connector     = this.connector_pool;
+            this.db_user_manager.connector          = this.connector_pool;
 
             this.logger.info(`✅ [${this.name}] Connection to MySQL established successfully`);
             return this.connector_pool;
