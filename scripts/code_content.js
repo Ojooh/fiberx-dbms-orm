@@ -48,7 +48,7 @@ class ${model_name}InitialMigration {
             schema_name: ${model_name}Schema?.name,
         };
 
-        this.connector          = this.datbase_manager.getRegistredDataSource(${model_name}Schema?.datasource_name);
+        this.connector          = this.datbase_manager.getRegisteredDataSource(${model_name}Schema?.datasource_name);
         this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
     }
@@ -99,7 +99,7 @@ class ${model_name}DeltaMigration {
             schema_name: ${model_name}Schema?.name,
         };
 
-        this.connector          = this.datbase_manager.getRegistredDataSource(${model_name}Schema?.datasource_name);
+        this.connector          = this.datbase_manager.getRegisteredDataSource(${model_name}Schema?.datasource_name);
         this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
         this.added_cols         = ${JSON.stringify(added_cols)};
@@ -194,7 +194,7 @@ class ${class_name} {
         this.ENV                = database_manager?.ENV;
         this.helper             = database_manager?.helper;
         this.logger             = logger;
-        this.connector          = this.database_manager.getRegistredDataSource(${schema_name}?.datasource_name);
+        this.connector          = this.database_manager.getRegisteredDataSource(${schema_name}?.datasource_name);
         this.QueryBuilderClass  = QueryBuilderMapper(${schema_name}?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${schema_name}, [], this.logger);
         this.model              = this.database_manager?.models?.${model_ref};
