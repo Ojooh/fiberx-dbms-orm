@@ -31,6 +31,7 @@ class PostgresDbUserManager {
 
             if(result.rows.length) {
                 this.logger.info(`[${this.name}] ✅ User '${username}' already exists`);
+                return true;
             }
 
             const query = `CREATE USER "${username}" WITH PASSWORD $1`;
@@ -51,6 +52,14 @@ class PostgresDbUserManager {
         this.#sanitizeInputs(database, "database");
 
         try {
+            const check_query   = "SELECT 1 FROM pg_database WHERE datname = $1";
+            const result        = await this.connector.executeQuery(check_query, { params: [database] });
+
+            if(result?.rowCount) {
+                this.logger.info(`[${this.name}] ✅ Database '${database}' already exists`);
+                return true;
+            }
+
             const query = this.generateCreateDatabaseQuery(database);
             await this.connector.executeQuery(query);
 
