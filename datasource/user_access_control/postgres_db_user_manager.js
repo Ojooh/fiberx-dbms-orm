@@ -48,7 +48,7 @@ class PostgresDbUserManager {
     }
 
     // Method to create database
-    createDatabase = async (database) => {
+    createDatabase = async (database, collation, charset) => {
         this.#sanitizeInputs(database, "database");
 
         try {
