@@ -23,7 +23,7 @@ class ${class_name}Model extends BaseModel {
     addComputedAttributes = () => {
         const computed_attributes = this.getComputedAttributes();
         for (const [key, value] of Object.entries(computed_attributes)) {
-            this[key] = value;
+            if(value) { this[key] = value; }
         }
     };
 }

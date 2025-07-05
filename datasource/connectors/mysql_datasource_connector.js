@@ -12,7 +12,7 @@ class MysqlDatasourceConnector {
         this.connector_pool     = null;
 
         this.logger             = logger || new LoggerUtil(this.name);
-        this.db_user_manager    = new MysqlDbUserManager(this.connector_pool, this.options, this.logger);
+        this.db_user_manager    = new MysqlDbUserManager(this, this.options, this.logger);
     }
 
     // Method to find or create database
@@ -56,7 +56,7 @@ class MysqlDatasourceConnector {
             await this.findOrCreateDb(pool_config_obj);
 
             this.connector_pool                     = createPool(pool_config_obj);
-            this.db_user_manager.connector          = this.connector_pool;
+            this.db_user_manager.connector          = this;
 
             this.logger.info(`✅ [${this.name}] Connection to MySQL established successfully`);
             return this.connector_pool;
@@ -149,7 +149,7 @@ class MysqlDatasourceConnector {
     // Method to execute MYSQL QUERY
     executeQuery = async (query, options = {}) => {
         try {
-             await this.connectIfNeeded();
+            await this.connectIfNeeded();
 
             const { transaction, params = [],  }  = options;
             const query_log_type                    = transaction ? (transaction?.transaction_id) : "Default"

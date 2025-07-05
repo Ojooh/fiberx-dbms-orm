@@ -36,7 +36,9 @@ class MysqlDbUserManager {
         }
 
         try {
-            const query = `CREATE USER IF NOT EXISTS '${username}'@'%' IDENTIFIED BY '${password}'`;
+            const { host } = this.options;
+
+            const query = `CREATE USER IF NOT EXISTS '${username}'@'${host}' IDENTIFIED BY '${password}'`;
             await this.connector.executeQuery(query);
 
             this.logger.info(`[${this.name}] ✅ Created MySQL user '${username}' successfully`);
