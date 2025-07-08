@@ -90,12 +90,19 @@ class PostgresDbUserManager {
 
             const mapped_privileges = valid_permissions.map(p => this.permission_map[p]);
             const privilege_str     = mapped_privileges.join(', ');
+            const table_identifier  = `"${database}".public."${table}"`;
+            const user_identifier   = `"${username}"`;
 
-            const query = `GRANT ${privilege_str} ON TABLE "${database}".public."${table}" TO "${username}"`;
+            // Step 1: Revoke all privileges on the table
+            const revoke_query = `REVOKE ALL PRIVILEGES ON TABLE ${table_identifier} FROM ${user_identifier}`;
+            await this.connector.executeQuery(revoke_query);
+            this.logger.info(`[${this.name}] 🔄 Revoked all privileges on ${database}.${table} from '${username}'`);
 
-            await this.connector.executeQuery(query);
-
+            // Step 2: Grant new privileges
+            const grant_query = `GRANT ${privilege_str} ON TABLE ${table_identifier} TO ${user_identifier}`;
+            await this.connector.executeQuery(grant_query);
             this.logger.info(`[${this.name}] ✅ Granted ${privilege_str} on ${database}.${table} to '${username}'`);
+
             return true;
         }
         catch (error) {

@@ -101,11 +101,19 @@ class MysqlDbUserManager {
             }
 
             const privilege_str     = mapped_privileges.join(', ');
-            const query             = `GRANT ${privilege_str} ON \`${database}\`.\`${table}\` TO '${username}'@'${host}'`;
+            const user_identifier   = `'${username}'@'${host}'`;
 
-            await this.connector.executeQuery(query);
+            // Step 1: Revoke all privileges on the specified database and table
+            const revoke_query = `REVOKE ALL PRIVILEGES ON \`${database}\`.\`${table}\` FROM ${user_identifier}`;
+            await this.connector.executeQuery(revoke_query);
+            this.logger.info(`[${this.name}] 🔄 Revoked all privileges on ${database}.${table} from '${username}'`);
 
+            // Step 2: Grant the new privileges
+            const grant_query = `GRANT ${privilege_str} ON \`${database}\`.\`${table}\` TO ${user_identifier}`;
+            await this.connector.executeQuery(grant_query);
             this.logger.info(`[${this.name}] ✅ Granted ${privilege_str} on ${database}.${table} to '${username}'`);
+
+
             return true
         }
         catch (error) {
