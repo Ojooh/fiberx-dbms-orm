@@ -1,8 +1,8 @@
 
-const modelCodeContent = (class_name) => {
+const modelCodeContent = (app_id, class_name) => {
     return`
 const { SQLBaseModel: BaseModel }   = require("fiberx-dbms-orm");
-const { ${class_name}Schema }       = require("../../schemas/app_schemas");
+const { ${class_name}Schema }       = require("../../schemas/${app_id.toLowerCase()}_schemas");
 
 class ${class_name}Model extends BaseModel {
     // Define your schema here
@@ -32,10 +32,10 @@ module.exports = ${class_name}Model;
 `;
 } 
 
-const initialMigrationContent = (model_name, column_names, index_names) => {
+const initialMigrationContent = (app_id, model_name, column_names, index_names) => {
     return `
 const { QueryBuilderMapper } = require("fiberx-dbms-orm");
-const { ${model_name}Schema }    = require("../../schemas/app_schemas");
+const { ${model_name}Schema }    = require("../../schemas/${app_id.toLowerCase()}_schemas");
 
 class ${model_name}InitialMigration {
     constructor(database_manager, logger = null) {
@@ -48,7 +48,9 @@ class ${model_name}InitialMigration {
             schema_name: ${model_name}Schema?.name,
         };
 
-        this.connector          = this.datbase_manager.getRegisteredDataSource(${model_name}Schema?.datasource_name);
+        this.db_connections     = this.datbase_manager?.ENV?.DB_CONNECTIONS;
+        this.db_connection      = this.db_connections.find((connection) => { return connection?.DB_TYPE === ${model_name}Schema?.datasource_type });
+        this.connector          = this.datbase_manager.getRegisteredDataSource(this.db_connection?.DB_NAME);
         this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
     }
@@ -83,10 +85,10 @@ module.exports = ${model_name}InitialMigration;
 `
 }
 
-const deltaMigrationContent = (model_name, added_cols, added_indx, removed_cols, removed_indx) => {
+const deltaMigrationContent = (app_id, model_name, added_cols, added_indx, removed_cols, removed_indx) => {
     return `
 const { QueryBuilderMapper } = require("fiberx-dbms-orm");
-const { ${model_name}Schema }    = require("../../schemas/app_schemas");
+const { ${model_name}Schema }    = require("../../schemas/${app_id.toLowerCase()}_schemas");
 
 class ${model_name}DeltaMigration {
     constructor(database_manager, logger = null) {
@@ -99,7 +101,9 @@ class ${model_name}DeltaMigration {
             schema_name: ${model_name}Schema?.name,
         };
 
-        this.connector          = this.datbase_manager.getRegisteredDataSource(${model_name}Schema?.datasource_name);
+        this.db_connections     = this.datbase_manager?.ENV?.DB_CONNECTIONS;
+        this.db_connection      = this.db_connections.find((connection) => { return connection?.DB_TYPE === ${model_name}Schema?.datasource_type });
+        this.connector          = this.datbase_manager.getRegisteredDataSource(this.db_connection?.DB_NAME);
         this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
         this.added_cols         = ${JSON.stringify(added_cols)};
@@ -177,7 +181,7 @@ module.exports = ${model_name}DeltaMigration;
 `
 }
 
-const seederContent = (model_name, pascal_seeder_name = null, snake_seeder_name = null, file_name = null, seed_data_sample = {}) => {
+const seederContent = (app_id, model_name, pascal_seeder_name = null, snake_seeder_name = null, file_name = null, seed_data_sample = {}) => {
     const class_name     = `${pascal_seeder_name}Seeder`;
     const schema_name    = `${model_name}Schema`;
     const model_ref      = `${model_name}Model`;
@@ -185,7 +189,7 @@ const seederContent = (model_name, pascal_seeder_name = null, snake_seeder_name 
 
     return `
 const { QueryBuilderMapper }    = require("fiberx-dbms-orm");
-const { ${schema_name} }         = require("../../schemas/app_schemas");
+const { ${schema_name} }        = require("../../schemas/${app_id.toLowerCase()}_schemas");
 
 class ${class_name} {
     constructor(database_manager, logger = null) {

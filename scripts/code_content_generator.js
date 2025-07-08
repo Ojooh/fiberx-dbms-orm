@@ -31,9 +31,9 @@ class CodeContentGenerator {
     // Method to Generate and write model files from schemas
     createModelFileFromSchemas = (schemas) => {
         for (const schema of schemas) {
-            const { model_name } = schema;
+            const { model_name, app_id } = schema;
             const snake_name = this.toSnakeCase(model_name);
-            const content = modelCodeContent(this.toPascalCase(model_name));
+            const content = modelCodeContent(app_id, this.toPascalCase(model_name));
             const file_path = path.join(this.output_dir, `${snake_name}.js`);
 
             if (fs.existsSync(file_path)) {
@@ -49,30 +49,30 @@ class CodeContentGenerator {
     }
 
     // Generate model content as a string
-    generateModelContent = (model_name) => {
+    generateModelContent = (app_id, model_name) => {
         const class_name = this.toPascalCase(model_name);
 
-        return modelCodeContent(class_name)
+        return modelCodeContent(app_id, class_name)
     }
 
     // Method to Generate initial migration content
-    generateInitialMigrationContent = (model_name, column_names, index_names) => {
+    generateInitialMigrationContent = (app_id, model_name, column_names, index_names) => {
         const class_model_name = this.toPascalCase(model_name);
-        return initialMigrationContent(class_model_name, column_names, index_names);
+        return initialMigrationContent(app_id, class_model_name, column_names, index_names);
     }
 
     // Method to Generate delta migration content
-    generateDeltaMigrationContent = (model_name, added_cols, added_indx, removed_cols, removed_indx) => {
+    generateDeltaMigrationContent = (app_id, model_name, added_cols, added_indx, removed_cols, removed_indx) => {
         const class_model_name = this.toPascalCase(model_name);
-        return deltaMigrationContent(class_model_name, added_cols, added_indx, removed_cols, removed_indx);
+        return deltaMigrationContent(app_id, class_model_name, added_cols, added_indx, removed_cols, removed_indx);
     }
 
     // Method to Generate seeder content
-    generateSeederContent = (model_name, seeder_name = null, file_name = null, seed_data_sample = {}) => {
+    generateSeederContent = (app_id, model_name, seeder_name = null, file_name = null, seed_data_sample = {}) => {
         const class_model_name      = this.toPascalCase(model_name);
         const pascal_seeder_name    = this.toPascalCase(seeder_name);
         const snake_seeder_name     = this.toSnakeCase(seeder_name)
-        return seederContent(class_model_name, pascal_seeder_name, snake_seeder_name, file_name, seed_data_sample);
+        return seederContent(app_id, class_model_name, pascal_seeder_name, snake_seeder_name, file_name, seed_data_sample);
     }
 
     // Method to Ensure output directory exists
