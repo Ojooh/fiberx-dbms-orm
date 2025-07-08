@@ -73,6 +73,33 @@ class PostgresDbUserManager {
         }
     }
 
+    // Method to revoke all priviledges if any exist
+    revokeUserExistingPriviledge = async (username, database, table) => {
+        this.#sanitizeInputs(username, "username");
+
+        this.#sanitizeInputs(database, "database");
+
+        this.#sanitizeInputs(table, "table");
+
+        try {
+            const { host }          = this.options;
+            const table_identifier  = `"${database}".public."${table}"`;
+            const user_identifier   = `"${username}"`;
+            const revoke_query      = `REVOKE ALL PRIVILEGES ON TABLE ${table_identifier} FROM ${user_identifier}`;
+
+
+            await this.connector.executeQuery(revoke_query);
+            this.logger.info(`[${this.name}] 🔄 Revoked all privileges on ${database}.${table} from '${username}'`);
+
+            return true
+        }
+        catch (error) {
+            const params = { username, database, table, error };
+            this.logger.error(`❌ [${this.name}] Error in revokeUserExistingPriviledge method`, params);
+            return false
+        }
+    }
+
     // Method to grant user privileges
     grantPrivileges = async (username, database, table = "*", permissions = []) => {
         this.#sanitizeInputs(username, "username");
@@ -94,9 +121,7 @@ class PostgresDbUserManager {
             const user_identifier   = `"${username}"`;
 
             // Step 1: Revoke all privileges on the table
-            const revoke_query = `REVOKE ALL PRIVILEGES ON TABLE ${table_identifier} FROM ${user_identifier}`;
-            await this.connector.executeQuery(revoke_query);
-            this.logger.info(`[${this.name}] 🔄 Revoked all privileges on ${database}.${table} from '${username}'`);
+            await this.revokeUserExistingPriviledge(username, database, table);
 
             // Step 2: Grant new privileges
             const grant_query = `GRANT ${privilege_str} ON TABLE ${table_identifier} TO ${user_identifier}`;

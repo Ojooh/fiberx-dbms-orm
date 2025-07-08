@@ -73,6 +73,32 @@ class MysqlDbUserManager {
         }
     }
 
+    // Method to revoke all priviledges if any exist
+    revokeUserExistingPriviledge = async (username, database, table) => {
+        this.#sanitizeInputs(username, "username");
+
+        this.#sanitizeInputs(database, "database");
+
+        this.#sanitizeInputs(table, "table");
+
+        try {
+            const { host }          = this.options;
+            const user_identifier   = `'${username}'@'${host}'`;
+            const revoke_query      = `REVOKE ALL PRIVILEGES ON \`${database}\`.\`${table}\` FROM ${user_identifier}`;
+
+
+            await this.connector.executeQuery(revoke_query);
+            this.logger.info(`[${this.name}] 🔄 Revoked all privileges on ${database}.${table} from '${username}'`);
+
+            return true
+        }
+        catch (error) {
+            const params = { username, database, table, error };
+            this.logger.error(`❌ [${this.name}] Error in revokeUserExistingPriviledge method`, params);
+            return false
+        }
+    }
+
     // Method to grant user privileges
     grantPrivileges = async (username, database, table = "*", permissions = []) => {
         this.#sanitizeInputs(username, "username");
@@ -104,9 +130,7 @@ class MysqlDbUserManager {
             const user_identifier   = `'${username}'@'${host}'`;
 
             // Step 1: Revoke all privileges on the specified database and table
-            const revoke_query = `REVOKE ALL PRIVILEGES ON \`${database}\`.\`${table}\` FROM ${user_identifier}`;
-            await this.connector.executeQuery(revoke_query);
-            this.logger.info(`[${this.name}] 🔄 Revoked all privileges on ${database}.${table} from '${username}'`);
+            await this.revokeUserExistingPriviledge(username, database, table);
 
             // Step 2: Grant the new privileges
             const grant_query = `GRANT ${privilege_str} ON \`${database}\`.\`${table}\` TO ${user_identifier}`;
