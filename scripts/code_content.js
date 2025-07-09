@@ -68,7 +68,7 @@ class ${model_name}InitialMigration {
         const { name, datasource_type } = formatted_db_connection;
 
         if (this.is_same_database) {
-            return this.database_manager.getRegisteredDataSource(db_connection?.name);
+            return this.database_manager.getRegisteredDataSource(formatted_db_connection?.name);
         } 
         else {
             const new_connection = { ...formatted_db_connection, database: this.database_name };
@@ -155,7 +155,7 @@ class ${model_name}DeltaMigration {
         const { name, datasource_type } = formatted_db_connection;
 
         if (this.is_same_database) {
-            return this.database_manager.getRegisteredDataSource(db_connection?.name);
+            return this.database_manager.getRegisteredDataSource(formatted_db_connection?.name);
         } 
         else {
             const new_connection = { ...formatted_db_connection, database: this.database_name };
@@ -235,7 +235,6 @@ module.exports = ${model_name}DeltaMigration;
 `
 }
 
-
 const seederContent = (app_id, model_name, pascal_seeder_name = null, snake_seeder_name = null, file_name = null, seed_data_sample = {}) => {
     const class_name     = `${pascal_seeder_name}Seeder`;
     const schema_name    = `${model_name}Schema`;
@@ -280,7 +279,7 @@ class ${class_name} {
         const { name, datasource_type } = formatted_db_connection;
 
         if (this.is_same_database) {
-            return this.database_manager.getRegisteredDataSource(db_connection?.name);
+            return this.database_manager.getRegisteredDataSource(formatted_db_connection?.name);
         } 
         else {
             const new_connection = { ...formatted_db_connection, database: this.database_name };
