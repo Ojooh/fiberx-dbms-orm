@@ -35,12 +35,14 @@ module.exports = ${class_name}Model;
 const initialMigrationContent = (app_id, model_name, column_names, index_names) => {
     return `
 const { QueryBuilderMapper } = require("fiberx-dbms-orm");
-const { ${model_name}Schema }    = require("../../schemas/${app_id.toLowerCase()}_schemas");
+const { ${model_name}Schema } = require("../../schemas/${app_id.toLowerCase()}_schemas");
 
 class ${model_name}InitialMigration {
     constructor(database_manager, logger = null) {
-        this.datbase_manager    = database_manager;
-        this.logger             = logger
+        this.database_manager    = database_manager;
+        this.logger              = logger;
+        this.env                 = database_manager?.ENV;
+        this.database_name       = \`\${${model_name}Schema?.app_id}_\${this.env?.MODE.toLowerCase()}\`;
         this.metadata = {
             columns: ${JSON.stringify(column_names)},
             indexes: ${JSON.stringify(index_names)},
@@ -48,16 +50,37 @@ class ${model_name}InitialMigration {
             schema_name: ${model_name}Schema?.name,
         };
 
-        this.db_connections     = this.datbase_manager?.ENV?.DB_CONNECTIONS;
-        this.db_connection      = this.db_connections.find((connection) => { return connection?.DB_TYPE === ${model_name}Schema?.datasource_type });
-        this.connector          = this.datbase_manager.getRegisteredDataSource(this.db_connection?.DB_NAME);
-        this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
-        this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
+        this.connector           = null;
+        this.QueryBuilderClass   = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
+        this.query_builder       = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
+    }
+
+    establishDbConnection = async () => {
+        const db_connections = this.env?.DB_CONNECTIONS;
+        const db_connection = db_connections.find(conn => conn?.DB_TYPE === ${model_name}Schema?.datasource_type);
+        if (!db_connection) throw new Error("No matching DB connection found");
+
+        this.is_same_database = db_connection?.DB_DATBASE === this.database_name;
+
+        if (this.is_same_database) {
+            return this.database_manager.getRegisteredDataSource(db_connection?.DB_NAME);
+        } else {
+            const new_connection = { ...db_connection, DB_DATBASE: this.database_name };
+            const { name, datasource_type } = new_connection;
+            return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
+        }
+    }
+
+    closeConnection = () => {
+        if (!this.is_same_database && this.connector?.close) {
+            this.connector.close();
+        }
     }
 
     up = async () => {
-        const { create_sql, trigger_sqls }  = this.query_builder.createTable();
+        this.connector = await this.establishDbConnection();
 
+        const { create_sql, trigger_sqls } = this.query_builder.createTable();
         await this.connector.executeQuery(create_sql);
 
         if (trigger_sqls && Array.isArray(trigger_sqls)) {
@@ -67,33 +90,37 @@ class ${model_name}InitialMigration {
         }
 
         const indexes = ${model_name}Schema.indexes;
-
         for (const index_obj of indexes) {
             const create_index_query = this.query_builder.createIndex(index_obj.fields, index_obj?.unique);
             await this.connector.executeQuery(create_index_query);
         }
+
+        this.closeConnection();
     }
 
     down = async () => {
+        this.connector = await this.establishDbConnection();
         const query = this.query_builder.dropTable();
         await this.connector.executeQuery(query);
+        this.closeConnection();
     }
 }
 
 module.exports = ${model_name}InitialMigration;
-    
 `
 }
 
 const deltaMigrationContent = (app_id, model_name, added_cols, added_indx, removed_cols, removed_indx) => {
     return `
 const { QueryBuilderMapper } = require("fiberx-dbms-orm");
-const { ${model_name}Schema }    = require("../../schemas/${app_id.toLowerCase()}_schemas");
+const { ${model_name}Schema } = require("../../schemas/${app_id.toLowerCase()}_schemas");
 
 class ${model_name}DeltaMigration {
     constructor(database_manager, logger = null) {
-        this.datbase_manager    = database_manager;
-        this.logger             = logger
+        this.database_manager    = database_manager;
+        this.logger              = logger;
+        this.env                 = database_manager?.ENV;
+        this.database_name       = \`\${${model_name}Schema?.app_id}_\${this.env?.MODE.toLowerCase()}\`;
         this.metadata = {
             columns: ${JSON.stringify(added_cols)},
             indexes: ${JSON.stringify(added_indx)},
@@ -101,27 +128,46 @@ class ${model_name}DeltaMigration {
             schema_name: ${model_name}Schema?.name,
         };
 
-        this.db_connections     = this.datbase_manager?.ENV?.DB_CONNECTIONS;
-        this.db_connection      = this.db_connections.find((connection) => { return connection?.DB_TYPE === ${model_name}Schema?.datasource_type });
-        this.connector          = this.datbase_manager.getRegisteredDataSource(this.db_connection?.DB_NAME);
-        this.QueryBuilderClass  = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
-        this.query_builder      = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
-        this.added_cols         = ${JSON.stringify(added_cols)};
-        this.removed_cols       = ${JSON.stringify(removed_cols)};
-        this.added_indx         = ${JSON.stringify(added_indx)};
-        this.removed_indx       = ${JSON.stringify(removed_indx)};
-        this.all_cols           = Object.keys(${model_name}Schema.columns);
-        this.all_indexes        = ${model_name}Schema.indexes || [];
+        this.connector           = null;
+        this.QueryBuilderClass   = QueryBuilderMapper(${model_name}Schema?.datasource_type, this.logger);
+        this.query_builder       = new this.QueryBuilderClass(${model_name}Schema, [], this.logger);
+        this.added_cols          = ${JSON.stringify(added_cols)};
+        this.removed_cols        = ${JSON.stringify(removed_cols)};
+        this.added_indx          = ${JSON.stringify(added_indx)};
+        this.removed_indx        = ${JSON.stringify(removed_indx)};
+        this.all_cols            = Object.keys(${model_name}Schema.columns);
+        this.all_indexes         = ${model_name}Schema.indexes || [];
+    }
+
+    establishDbConnection = async () => {
+        const db_connections = this.env?.DB_CONNECTIONS;
+        const db_connection = db_connections.find(conn => conn?.DB_TYPE === ${model_name}Schema?.datasource_type);
+        if (!db_connection) throw new Error("No matching DB connection found");
+
+        this.is_same_database = db_connection?.DB_DATBASE === this.database_name;
+
+        if (this.is_same_database) {
+            return this.database_manager.getRegisteredDataSource(db_connection?.DB_NAME);
+        } else {
+            const new_connection = { ...db_connection, DB_DATBASE: this.database_name };
+            const { name, datasource_type } = new_connection;
+            return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
+        }
+    }
+
+    closeConnection = () => {
+        if (!this.is_same_database && this.connector?.close) {
+            this.connector.close();
+        }
     }
 
     addNewColumns = async (new_col_names) => {
         for (const new_column_name of new_col_names) {
-            const after_col_index               = this.all_cols.indexOf(new_column_name);
-            const after_col                     = this.all_cols[after_col_index - 1] || null;
-            const position_obj                  = { after: after_col };
-            const col_def                       = ${model_name}Schema.columns[new_column_name];
-            const { alter_sql, trigger_sqls }   = this.query_builder.addColumn(new_column_name, col_def, position_obj);
-
+            const after_col_index = this.all_cols.indexOf(new_column_name);
+            const after_col = this.all_cols[after_col_index - 1] || null;
+            const position_obj = { after: after_col };
+            const col_def = ${model_name}Schema.columns[new_column_name];
+            const { alter_sql, trigger_sqls } = this.query_builder.addColumn(new_column_name, col_def, position_obj);
             await this.connector.executeQuery(alter_sql);
 
             for (const trigger_sql of trigger_sqls) {
@@ -140,8 +186,7 @@ class ${model_name}DeltaMigration {
     addNewIndexes = async (index_names) => {
         for (const index_name of index_names) {
             const index_obj = this.all_indexes.find(obj => obj?.name === index_name);
-
-            if (!index_obj) { continue; }
+            if (!index_obj) continue;
 
             const query = this.query_builder.createIndex(index_obj?.fields, index_obj?.unique);
             await this.connector.executeQuery(query);
@@ -156,30 +201,32 @@ class ${model_name}DeltaMigration {
     }
 
     up = async () => {
+        this.connector = await this.establishDbConnection();
+
         if (this.added_cols.length > 0) { await this.addNewColumns(this.added_cols); }
-
         if (this.removed_cols.length > 0) { await this.dropColumns(this.removed_cols); }
-
         if (this.added_indx.length > 0) { await this.addNewIndexes(this.added_indx); }
-
         if (this.removed_indx.length > 0) { await this.dropIndexes(this.removed_indx); }
+
+        this.closeConnection();
     }
 
     down = async () => {
+        this.connector = await this.establishDbConnection();
+
         if (this.added_cols.length > 0) { await this.dropColumns(this.added_cols); }
-
         if (this.removed_cols.length > 0) { await this.addNewColumns(this.removed_cols); }
-
         if (this.added_indx.length > 0) { await this.dropIndexes(this.added_indx); }
-
         if (this.removed_indx.length > 0) { await this.addNewIndexes(this.removed_indx); }
+
+        this.closeConnection();
     }
 }
 
 module.exports = ${model_name}DeltaMigration;
-    
 `
 }
+
 
 const seederContent = (app_id, model_name, pascal_seeder_name = null, snake_seeder_name = null, file_name = null, seed_data_sample = {}) => {
     const class_name     = `${pascal_seeder_name}Seeder`;
