@@ -3,10 +3,12 @@ const modelCodeContent = (app_id, class_name) => {
     return`
 const { SQLBaseModel: BaseModel }   = require("fiberx-dbms-orm");
 const { ${class_name}Schema }       = require("../../schemas/${app_id.toLowerCase()}_schemas");
+const LoggerUtil                    = require("../../../utils/logger_util");
 
 class ${class_name}Model extends BaseModel {
     // Define your schema here
-    static schema = ${class_name}Schema;
+    static schema   = ${class_name}Schema;
+    static _logger  = new LoggerUtil("${class_name}Model");
 
     #raw;
 
@@ -56,17 +58,20 @@ class ${model_name}InitialMigration {
     }
 
     establishDbConnection = async () => {
-        const db_connections = this.env?.DB_CONNECTIONS;
-        const db_connection = db_connections.find(conn => conn?.DB_TYPE === ${model_name}Schema?.datasource_type);
-        if (!db_connection) throw new Error("No matching DB connection found");
+        const db_connections    = this.env?.DB_CONNECTIONS;
+        const db_connection     = db_connections.find(conn => conn?.DB_TYPE === ${model_name}Schema?.datasource_type);
 
-        this.is_same_database = db_connection?.DB_DATBASE === this.database_name;
+        if (!db_connection) { throw new Error("No matching DB connection found"); }
+
+        const formatted_db_connection   = this.database_manager.getDBConnectionObject(db_connection);
+        this.is_same_database           = formatted_db_connection?.database === this.database_name;
+        const { name, datasource_type } = formatted_db_connection;
 
         if (this.is_same_database) {
-            return this.database_manager.getRegisteredDataSource(db_connection?.DB_NAME);
-        } else {
-            const new_connection = { ...db_connection, DB_DATBASE: this.database_name };
-            const { name, datasource_type } = new_connection;
+            return this.database_manager.getRegisteredDataSource(db_connection?.name);
+        } 
+        else {
+            const new_connection = { ...formatted_db_connection, database: this.database_name };
             return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
         }
     }
@@ -140,17 +145,20 @@ class ${model_name}DeltaMigration {
     }
 
     establishDbConnection = async () => {
-        const db_connections = this.env?.DB_CONNECTIONS;
-        const db_connection = db_connections.find(conn => conn?.DB_TYPE === ${model_name}Schema?.datasource_type);
-        if (!db_connection) throw new Error("No matching DB connection found");
+        const db_connections    = this.env?.DB_CONNECTIONS;
+        const db_connection     = db_connections.find(conn => conn?.DB_TYPE === ${model_name}Schema?.datasource_type);
 
-        this.is_same_database = db_connection?.DB_DATBASE === this.database_name;
+        if (!db_connection) { throw new Error("No matching DB connection found"); }
+
+        const formatted_db_connection   = this.database_manager.getDBConnectionObject(db_connection);
+        this.is_same_database           = formatted_db_connection?.database === this.database_name;
+        const { name, datasource_type } = formatted_db_connection;
 
         if (this.is_same_database) {
-            return this.database_manager.getRegisteredDataSource(db_connection?.DB_NAME);
-        } else {
-            const new_connection = { ...db_connection, DB_DATBASE: this.database_name };
-            const { name, datasource_type } = new_connection;
+            return this.database_manager.getRegisteredDataSource(db_connection?.name);
+        } 
+        else {
+            const new_connection = { ...formatted_db_connection, database: this.database_name };
             return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
         }
     }
@@ -242,10 +250,12 @@ class ${class_name} {
     constructor(database_manager, logger = null) {
         this.name               = "${snake_seeder_name}_seeder";
         this.database_manager   = database_manager;
-        this.ENV                = database_manager?.ENV;
+        this.env                = database_manager?.ENV;
         this.helper             = database_manager?.helper;
+        this.database_name      = \`\${${model_name}Schema?.app_id}_\${this.env?.MODE.toLowerCase()}\`;
         this.logger             = logger;
-        this.connector          = this.database_manager.getRegisteredDataSource(${schema_name}?.datasource_name);
+
+        this.connector          = null
         this.QueryBuilderClass  = QueryBuilderMapper(${schema_name}?.datasource_type, this.logger);
         this.query_builder      = new this.QueryBuilderClass(${schema_name}, [], this.logger);
         this.model              = this.database_manager?.models?.${model_ref};
@@ -259,6 +269,31 @@ class ${class_name} {
         ];
     }
 
+    establishDbConnection = async () => {
+        const db_connections    = this.env?.DB_CONNECTIONS;
+        const db_connection     = db_connections.find(conn => conn?.DB_TYPE === ${schema_name}?.datasource_type);
+
+        if (!db_connection) { throw new Error("No matching DB connection found"); }
+
+        const formatted_db_connection   = this.database_manager.getDBConnectionObject(db_connection);
+        this.is_same_database           = formatted_db_connection?.database === this.database_name;
+        const { name, datasource_type } = formatted_db_connection;
+
+        if (this.is_same_database) {
+            return this.database_manager.getRegisteredDataSource(db_connection?.name);
+        } 
+        else {
+            const new_connection = { ...formatted_db_connection, database: this.database_name };
+            return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
+        }
+    }
+
+    closeConnection = () => {
+        if (!this.is_same_database && this.connector?.close) {
+            this.connector.close();
+        }
+    }
+
     up = async () => {
         try {
             const seeder_data   = this.getModelSeedData();
@@ -268,18 +303,24 @@ class ${class_name} {
                 return;
             }
 
-            const seeded        = await this.model.bulkCreate(seeder_data, { ignore_duplicates: true });
+            this.connector = await this.establishDbConnection();
+
+            const seeded = await this.model.bulkCreate(seeder_data, { ignore_duplicates: true });
 
             if (!seeded || !seeded.length) {
                 this.logger?.error(\`[\${this.name}] 🚫 Error seeding the database.\`);
                 throw new Error("Seeding failed.");
             }
 
+            this.closeConnection();
+
             this.logger?.info(\`[\${this.name}] 🌱 Seeded \${seeder_data.length} rows into model "${model_name}" from file "${log_file_name}"\`);
-        } catch (error) {
+        } 
+        catch (error) {
             this.logger?.error(\`[\${this.name}] 🚫 Error in up method\`, { error });
             throw error;
         }
+        finally { this.closeConnection(); }
     }
 
     down = async () => {
@@ -291,20 +332,24 @@ class ${class_name} {
                 return;
             }
 
-            const ids           = seeder_data.map(item => item?.id).filter(Boolean);
+            const ids  = seeder_data.map(item => item?.id).filter(Boolean);
 
             if (!ids.length) {
                 this.logger?.info(\`[\${this.name}] ⚠️ No IDs found for rollback.\`);
                 return;
             }
 
+            this.connector = await this.establishDbConnection();
+
             const deleted = await this.model.destroy({ id: ids });
 
             this.logger?.info(\`[\${this.name}] 🧹 Rolled back \${deleted} seeded rows from model "${this.model?.model}"\`);
-        } catch (error) {
+        } 
+        catch (error) {
             this.logger?.error(\`[\${this.name}] 🚫 Error in up method\`, { error });
             throw error;
         }
+        finally { this.closeConnection(); }
     }
 }
 
