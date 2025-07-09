@@ -58,6 +58,7 @@ class DatasourceRegistry {
 
             await connector.connect();
             this.#registerConnector(name, connector);
+            return connector;
         }
         catch (error) {
             const msg = `❌ [${this.name}] Failed to initialize connector: "${connector_name}"`;
