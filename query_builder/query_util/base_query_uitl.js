@@ -113,7 +113,7 @@ class BaseQueryUtil {
         for (const include_obj of includes) {
             const association       = this._resolveAssociation(base_table, include_obj);
             const alias             = include_obj?.as || association?.model?.schema?.table_name;
-            let nested              = { joins: [], fields: [] };
+            let nested              = { joins: [], fields: "" };
             let sub_query           = null
 
             if (include_obj?.include?.length) {
@@ -132,10 +132,13 @@ class BaseQueryUtil {
                 throw new Error(msg);
             }
 
-            const { join, fields } = sub_query
+            const { join, fields }          = sub_query
+            const formatted_fields          = fields?.trim()?.replace(/,+\s*$/, '');
+            const formatted_nested_fields   =  nested?.fields ? nested?.fields?.trim()?.replace(/,+\s*$/, '') : "";
+            const all_fields                = `${formatted_fields}, ${formatted_nested_fields}`.replace(/,+\s*$/, '');
 
             joins.push(join, ...nested.joins);
-            extra_fields.push(fields, ...nested.fields);
+            extra_fields.push(all_fields);
         }
 
         return { joins, fields: extra_fields.filter(Boolean).join(', ') };

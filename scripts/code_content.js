@@ -71,8 +71,8 @@ class ${model_name}InitialMigration {
             return this.database_manager.getRegisteredDataSource(formatted_db_connection?.name);
         } 
         else {
-            const new_connection = { ...formatted_db_connection, database: this.database_name };
-            return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
+            const new_connection = { ...formatted_db_connection, name: this.database_name, database: this.database_name };
+            return await this.database_manager.datasource_registry_instance.initializeConnector(this.database_name , datasource_type, new_connection);
         }
     }
 
@@ -158,8 +158,8 @@ class ${model_name}DeltaMigration {
             return this.database_manager.getRegisteredDataSource(formatted_db_connection?.name);
         } 
         else {
-            const new_connection = { ...formatted_db_connection, database: this.database_name };
-            return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
+            const new_connection = { ...formatted_db_connection, name: this.database_name, database: this.database_name };
+            return await this.database_manager.datasource_registry_instance.initializeConnector(this.database_name , datasource_type, new_connection);
         }
     }
 
@@ -282,8 +282,8 @@ class ${class_name} {
             return this.database_manager.getRegisteredDataSource(formatted_db_connection?.name);
         } 
         else {
-            const new_connection = { ...formatted_db_connection, database: this.database_name };
-            return await this.database_manager.datasource_registry_instance.initializeConnector(name, datasource_type, new_connection);
+            const new_connection = { ...formatted_db_connection, name: this.database_name, database: this.database_name };
+            return await this.database_manager.datasource_registry_instance.initializeConnector(this.database_name , datasource_type, new_connection);
         }
     }
 
@@ -302,9 +302,8 @@ class ${class_name} {
                 return;
             }
 
-            this.connector = await this.establishDbConnection();
-
-            const seeded = await this.model.bulkCreate(seeder_data, { ignore_duplicates: true });
+            this.connector  = await this.establishDbConnection();
+            const seeded    = await this.model.bulkCreate(seeder_data, { ignore_duplicates: true });
 
             if (!seeded || !seeded.length) {
                 this.logger?.error(\`[\${this.name}] 🚫 Error seeding the database.\`);
@@ -338,9 +337,8 @@ class ${class_name} {
                 return;
             }
 
-            this.connector = await this.establishDbConnection();
-
-            const deleted = await this.model.destroy({ id: ids });
+            this.connector  = await this.establishDbConnection();
+            const deleted   = await this.model.destroy({ id: ids });
 
             this.logger?.info(\`[\${this.name}] 🧹 Rolled back \${deleted} seeded rows from model "${this.model?.model}"\`);
         } 
