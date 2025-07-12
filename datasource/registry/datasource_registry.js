@@ -47,6 +47,7 @@ class DatasourceRegistry {
             const { MODE = "development", APP_ID = "" } = app_config;
 
             this.global_vars.setVariable("ENV", app_config);
+            this.global_vars.setVariable("APP_ID", APP_ID);
 
             this.logger.info(`[${this.name}] Registering connection for app ${APP_ID} in ${MODE} mode`);
 
