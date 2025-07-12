@@ -1,5 +1,6 @@
 const DataourceConnectorMapper = require("../mapper/datasource_connector_mapper");
 const LoggerUtil                = require("../../utils/logger_util");
+const GlobalVariableManager     = require("../../utils/global_variable_manager");
 
 
 class DatasourceRegistry {
@@ -18,6 +19,7 @@ class DatasourceRegistry {
         this.registry       = new Map();
         this.logger         = logger || new LoggerUtil(this.name);
         this.mapper         = DataourceConnectorMapper || {};
+        this.global_vars    = GlobalVariableManager.getInstance();
     }
 
     // Method to get a connector for a data source
@@ -40,9 +42,15 @@ class DatasourceRegistry {
     }
 
     // Method to initialize a connector given name and connetion options
-    initializeConnector = async (name, datasource_type, options) => {
+    initializeConnector = async (name, datasource_type, connection_options, app_config = {}) => {
         try {
-            const connector = this.mapper[datasource_type] ? new this.mapper[datasource_type](options, this.logger) : null;
+            const { MODE = "development", APP_ID = "" } = app_config;
+
+            this.global_vars.setVariable("ENV", app_config);
+
+            this.logger.info(`[${this.name}] Registering connection for app ${APP_ID} in ${MODE} mode`);
+
+            const connector = this.mapper[datasource_type] ? new this.mapper[datasource_type](connection_options, this.logger) : null;
 
             if(!name) {
                 const msg = `❌  [${this.name}] Unsupported name input: ${name}`;

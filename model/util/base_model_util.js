@@ -17,26 +17,41 @@ class BaseModelUtil {
         this.datasource_name            = schema?.datasource_name;
         this.dialect                    = schema?.datasource_type;
         this.table_columns              = schema?.columns;
-        this.permissions                = schema?.permissions || []
+        this.permissions                = schema?.permissions || [];
+        
 
         this.logger                     = logger || new LoggerUtil(this.name);
         this.datasource_registry        = DatasourceRegistry.getInstance();
         this.global_vars                = GlobalVariableManager.getInstance();
         this.event_system               = new EventSystem();
+
+        this.ENV                        = this.global_vars.getVariable("ENV") || {};
+        this.database_name              = `${schema?.app_id}_${this.ENV?.MODE.toLowerCase()}`;
         this.numeric_types              = ['bigint', 'integer', 'double', 'real', "float", "double_precision", "decimal", "numeric"];
     }
 
 
     // Get registered data source connection
-    getConnector = () => { 
-        const connector = this.datasource_registry.getDataSource(this.datasource_name);
+    getConnector = async () => { 
+        let connector = this.datasource_registry.getDataSource(this.datasource_name);
 
         if (!connector) {
             const msg = `[${this.name}] No connector found for datasource_name: ${this.datasource_name}`;
             this.logger.error(msg)
             throw new Error(msg);
         }
-        return connector;
+
+        const new_connection    = { ...connector?.options, name: this.database_name, database: this.database_name };
+        const datasource_type   = connector?.datasource_type;
+        const is_same_database  = connector?.options?.database === this.database_name;
+
+        if(is_same_database) { return connector };
+
+        connector = this.datasource_registry.getDataSource(this.database_name);
+
+        if (connector) { return connector }
+
+        return await this.datasource_registry.initializeConnector(this.database_name , datasource_type, new_connection);
     }
 
     // Get query builder for data source
@@ -156,23 +171,23 @@ class BaseModelUtil {
     }
 
     // Method to get query method param obj
-    getConnectorAndQuery = (query_params ) => {
+    getConnectorAndQuery = async (query_params ) => {
         const { query_method_name, fields, where, options, amount, data = {} } = query_params;
 
         const { _, queryMethod }   = this.#getQueryMethod(query_method_name);
-        const connector            = this.getConnector();
+        const connector            = await this.getConnector();
         const params               = { schema: this.schema, fields, where, options, data, amount, table_name: this.table_name, table_columns: this.table_columns};
         const query                 = queryMethod(params);
 
         return { connector, query }
     }
 
-    getCountConnectorAndQuery = (query_params ) => {
+    getCountConnectorAndQuery = async (query_params ) => {
         const { query_method_name, fields, where, options, data = {} } = query_params;
 
 
         const { query_builder, queryMethod }    = this.#getQueryMethod(query_method_name);
-        const connector                         = this.getConnector();
+        const connector                         = await this.getConnector();
         const params                            = { schema: this.schema, fields, where, options, data, table_name: this.table_name, table_columns: this.table_columns}
         const count_query                       = query_builder.selectCount(params);
         const data_query                        = queryMethod(params);

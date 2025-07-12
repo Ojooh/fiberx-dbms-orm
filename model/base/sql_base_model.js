@@ -70,7 +70,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateSelectQueryInputs(fields, where);
             
             const query_params          = { query_method_name: "select", fields, where, options: { ...options, limit: 1 } };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
             const result                = await connector.executeQuery(query, options);
             const row                   = result?.[0] || null;
             const normalized            = row ? this.model_util.serializeRowResult(this.schema, row, options?.include) : null;
@@ -90,7 +90,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateSelectQueryInputs(fields, where);
 
             const query_params          = { query_method_name: "select", fields, where, options: { ...options, limit: 1 } };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
             const result                = await connector.executeQuery(query, options);
             const row                   = result?.[0] || null;
             const normalized            = row ? this.model_util.serializeRowResult(this.schema, row, options?.include) : null;
@@ -111,7 +111,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateSelectQueryInputs(fields, where);
 
             const query_params          = { query_method_name: "select", fields, where, options };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
             const result                = await connector.executeQuery(query, options);
             
             return result.map((row) => { 
@@ -133,7 +133,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateSelectQueryInputs([], where);
 
             const query_params          = { query_method_name: "selectCount", fields: [], where, options };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
             const result                = await connector.executeQuery(query, options);
             const row                   = result && result.length ? result[0] : null
 
@@ -181,7 +181,7 @@ class SQLBaseModel extends BaseModel {
 
             const sanitzed_fields       = this.model_util.sanitizeDataFields(data);
             const query_params          = { query_method_name: "insert", options, data: sanitzed_fields };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
 
             // trigger before create hook
             this.model_util.triggerHook("before_create", sanitzed_fields, options);
@@ -220,7 +220,7 @@ class SQLBaseModel extends BaseModel {
             const data_array = ignore_duplicates ? this.model_util?.getUniqueArray(data) : data.map((row) => this.model_util.sanitizeDataFields(row));
 
             const query_params          = { query_method_name: "bulkInsert", options, data: data_array };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
 
             // trigger before bulk insert hook
             this.model_util.triggerHook("before_bulk_create", data_array, options);
@@ -256,7 +256,7 @@ class SQLBaseModel extends BaseModel {
 
             const sanitzed_fields       = this.model_util.sanitizeDataFields(data);
             const query_params          = { query_method_name: "update", where: _where, options, data: sanitzed_fields };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
 
             // trigger before update hook
             this.model_util.triggerHook("before_update", sanitzed_fields, options);
@@ -284,7 +284,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateIncrementDecrementQueryInputs(fields, where, amount);
 
             const query_params          = { query_method_name: "increment", fields, where, options, amount };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
 
             // trigger before increment hook
             this.model_util.triggerHook("before_increment", { fields, where, amount }, options);
@@ -312,7 +312,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateIncrementDecrementQueryInputs(fields, where, amount);
 
             const query_params          = { query_method_name: "decrement", fields, where, options, amount };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
 
             // trigger before decrement hook
             this.model_util.triggerHook("before_decrement", { fields, where, amount }, options);
@@ -341,7 +341,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateDeleteQueryInputs(where);
 
             const query_params          = { query_method_name: "delete", where, options };
-            const { connector, query }  = this.model_util.getConnectorAndQuery(query_params);
+            const { connector, query }  = await this.model_util.getConnectorAndQuery(query_params);
 
             // trigger before delete hook
             this.model_util.triggerHook("before_delete", { where }, options);
