@@ -27,7 +27,7 @@ class FiberXBootstrapClient {
         const payload = { app_id: this.app_id, timestamp, signature };
 
         try {
-            const response = await axios.post(`${this.dbms_url}/api/app-bootstrap`, payload);
+            const response = await axios.post(`${this.dbms_url}/api/app-schema-access/app-bootstrap`, payload);
             this.logger.success(`[${this.name}] Fetched app boostrap data successfully`)
             return response.data;
         } 
