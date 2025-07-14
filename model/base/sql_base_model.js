@@ -77,7 +77,7 @@ class SQLBaseModel extends BaseModel {
 
             return normalized ? new this(normalized) : null;
         } catch (error) {
-            console.error(`[${this.name}] Error in findByPk method`, { error });
+            this.logger.error(`[${this.name}] Error in findByPk method`, { error });
             throw error;
         }
     }
