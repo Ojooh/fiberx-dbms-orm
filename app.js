@@ -25,6 +25,8 @@ const GlobalVariableManager     = require("./utils/global_variable_manager");
 
 // === Scripts ===
 const CodeContentGenerator      = require("./scripts/code_content_generator");
+const FiberXBootstrapClient     = require("./scripts/fiberx_bootstrap_client");
+
 
 // === Fiberx Main Interface ===
 const Fiberx = {
@@ -40,7 +42,8 @@ const Fiberx = {
   LoggerUtil,
   EventSystemUtil,
   GlobalVariableManager,
-  CodeContentGenerator
+  CodeContentGenerator,
+  FiberXBootstrapClient
 };
 
 module.exports = Fiberx;
