@@ -43,7 +43,7 @@ class BaseQueryUtil {
             throw new Error('Cannot escape object value directly');
         }
         
-        return value === null ? 'NULL' : value.toString();
+        return value === null || value === undefined ? 'NULL' : value.toString();
     };
 
     // Method to Formats ORDER BY, LIMIT, OFFSET, LOCK options into SQL clause
@@ -210,7 +210,11 @@ class BaseQueryUtil {
         const op = operator.toUpperCase();
         switch (op) {
             case "=":
+            case "IS":
+                return value === null || value === undefined ? `${qualified_key} IS NULL` :`${qualified_key} ${op} ${this.escapeValue(operand)}`;
             case "!=":
+            case "IS NOT":
+                return value === null || value === undefined ? `${qualified_key} IS NOT NULL` :`${qualified_key} ${op} ${this.escapeValue(operand)}`;
             case ">":
             case "<":
             case ">=":
@@ -250,8 +254,9 @@ class BaseQueryUtil {
                 const operator  = Object.keys(value)[0].toUpperCase();
                 const operand   = value[operator];
                 return this._formatOperandExpression(qualified_field, operator, operand);
-            } else {
-                return `${qualified_field} = ${this.escapeValue(value)}`;
+            } 
+            else {
+                return value === null || value === undefined ? `${qualified_field} IS NULL` : `${qualified_field} = ${this.escapeValue(value)}`;
             }
         }).join(' AND ');
     }
