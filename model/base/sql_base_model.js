@@ -154,7 +154,7 @@ class SQLBaseModel extends BaseModel {
             this.model_util.validateSelectQueryInputs(fields, where);
 
             const query_params                              = { query_method_name: "select", fields, where, options };
-            const { connector, count_query, data_query }    = this.model_util.getCountConnectorAndQuery(query_params);
+            const { connector, count_query, data_query }    = await this.model_util.getCountConnectorAndQuery(query_params);
             const [count_result, rows_result]                = await Promise.all([ connector.executeQuery(count_query, options), connector.executeQuery(data_query, options) ]);
 
             const normalized_rows = rows_result.map((row) => { 
