@@ -248,7 +248,7 @@ class QueryFormatterUtil {
 
         if (limit) { clause += ` LIMIT ${limit}`; }
 
-        if (offset) { clause += ` OFFSET ${offset}`; }
+        if (offset !== undefined && offset !== null) { clause += ` OFFSET ${offset}`; }
 
         if (lock) { clause += ` FOR ${lock}`; }
 
