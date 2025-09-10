@@ -59,7 +59,7 @@ class MySQLConnector implements BaseSQLConnector {
 
             this.pools.set("default", pool);
 
-            this.logger.success(`[${this.module_name}] Connected to MySQL`, { connection_params });
+            this.logger.success(`[${this.module_name}] Connected to MySQL`);
 
             return true;
         }
