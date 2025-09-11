@@ -45,12 +45,12 @@ class ${class_name}Model extends BaseSQLModel {
     }
 
     // Override this to define computed fields
-    protected getComputedAttributes() {
+    #getComputedAttributes() {
         return {};
     }
 
     // Adds computed attributes to this instance
-    protected addComputedAttributes() {
+    #addComputedAttributes() {
         const computed = this.getComputedAttributes();
         for (const [key, value] of Object.entries(computed)) {
             if (value !== undefined) { this[key] = value; }
@@ -58,6 +58,6 @@ class ${class_name}Model extends BaseSQLModel {
     }
 }
 
-module.exports =  ${class_name};
+module.exports =  ${class_name}Model;
 `;
 }
