@@ -59,7 +59,7 @@ class LoggerUtil {
         console.log(`\n${timestamp} [${level}] ${message}\n`);
 
         if (data_error && Object.keys(data_error).length) {
-            console.log({ data_error: data_error });
+            console.log({ ...data_error });
             console.log("\n========================================\n");
         }
 
