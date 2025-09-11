@@ -48,11 +48,11 @@ class MySQLConnector implements BaseSQLConnector {
                 return true;
             }
 
-            const { 
-                host, port, username: user, password, database_name: database, 
+            const { host, port, username: user, password, database_name: database, connection_info } = connection_params;
+            const {
                 wait_for_connection: waitForConnections = true, connection_limit: connectionLimit = 10,
-                queue_limit: queueLimit = 0
-            } = connection_params;
+                queue_limit: queueLimit = 0, charset, collation
+            } = connection_info
 
             const connection_config     = { host, port, user, database, password, waitForConnections, connectionLimit, queueLimit };
             const pool                  = mysql.createPool(connection_config);
@@ -60,6 +60,11 @@ class MySQLConnector implements BaseSQLConnector {
             this.pools.set("default", pool);
 
             this.logger.success(`[${this.module_name}] Connected to MySQL`);
+
+            if(database) { 
+                const database_params = { database_name: database, collation, charset };
+                this.sql_admin.createNewDatabase(database_params); 
+            }
 
             return true;
         }

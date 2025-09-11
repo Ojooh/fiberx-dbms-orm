@@ -55,17 +55,23 @@ class PostgresConnector implements BaseSQLConnector {
                 return true;
             }
 
-            const { 
-                host, port, username: user, password, database_name: database, 
-                connection_limit: max = 100,
-            } = connection_params;
+            const { host, port, username: user, password, database_name: database, connection_info } = connection_params;
+            const {
+                wait_for_connection: waitForConnections = true, connection_limit: max = 10,
+                queue_limit: queueLimit = 0, charset, collation
+            } = connection_info
 
             const connection_config     = { host, port, user, password, database, max };
             const pool                  = new Pool (connection_config);
 
             this.pools.set("default", pool);
 
-            this.logger.success(`[${this.module_name}] Connected to PostgreSQL`, { connection_params });
+            this.logger.success(`[${this.module_name}] Connected to PostgreSQL`);
+
+            if(database) { 
+                const database_params = { database_name: database, collation, charset };
+                this.sql_admin.createNewDatabase(database_params); 
+            }
 
             return true;
         }

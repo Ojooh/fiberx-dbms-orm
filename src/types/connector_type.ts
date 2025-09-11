@@ -1,8 +1,29 @@
 
+export type SQLDialect = "mysql" | "postgres" | "sqlite";
+
 export interface ConnectionParams { 
-    host: string; port?: number; username: string; password: string; database_name?: string; 
-    wait_for_connection?: boolean, connection_limit?: number, queue_limit?: number
+    name: string;
+    datasource_type: SQLDialect;
+    host: string;
+    username: string;
+    password: string;
+    database_name: string;
+    port: number;
+    connection_info: {
+        wait_for_connection?: boolean;
+        connection_limit?: number;
+        queue_limit?: number;
+        pool_max?: number;
+        pool_min?: number;
+        idle_timeout?: number;
+        connection_timeout?: number;
+        charset?: string;
+        collation?: string;
+        [key: string]: any;
+    };
 };
+
+
 
 export interface QueryParams { transaction_id?: string }
 
