@@ -32,7 +32,7 @@ class ModelGenerator {
     // Method to generate and write model files from schemas
     public createModelFileFromSchemas(schemas: SchemaDefinition[]): boolean {
         for (const schema of schemas) {
-            const { model_name, app_id, datasource_type } = schema;
+            const { model_name, app_id = "app_models", datasource_type } = schema;
 
             if (!this.isSQLDialect(datasource_type)) {
                 this.logger.info(`[${this.module_name}] Skipping non-SQL model "${model_name}"`);
@@ -40,7 +40,7 @@ class ModelGenerator {
             }
 
             const snake_name    = InputTransformerUtil.toSnakeCase(model_name || "");
-            const file_path     = path.join(this.output_dir, `${snake_name}.ts`);
+            const file_path     = path.join(this.output_dir, app_id, `${snake_name}.js`);
             const content       = this.generateModelContent(app_id || "", model_name || "");
 
             if (fs.existsSync(file_path)) {
