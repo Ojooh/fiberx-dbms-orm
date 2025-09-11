@@ -52,7 +52,7 @@ class ModelGenerator {
 
             const snake_name    = InputTransformerUtil.toSnakeCase(model_name || "");
             const model_app_dir = this.ensureDirExists(path.join(this.output_dir, app_id));
-            const file_path     = this.ensureDirExists(path.join(model_app_dir, `${snake_name}.js`));
+            const file_path     = path.join(model_app_dir, `${snake_name}.js`);
             const content       = this.generateModelContent(app_id || "", model_name || "");
 
             if (fs.existsSync(file_path)) {
