@@ -19,6 +19,17 @@ class ModelGenerator {
         this.logger         = logger || new LoggerUtil(this.module_name);
     }
 
+    // Method to Ensure a directory exists. If it doesn't, creates it.
+    private ensureDirExists(directory_path: string): string {
+        const resolved_path = path.resolve(directory_path);
+
+        if (!fs.existsSync(resolved_path)) {
+            fs.mkdirSync(resolved_path, { recursive: true });
+        }
+
+        return resolved_path;
+    }
+
     private isSQLDialect(dialect: string | undefined): boolean {
         return SUPPORTED_SQL_DIALECTS.includes((dialect || "").toLowerCase());
     }
@@ -40,7 +51,7 @@ class ModelGenerator {
             }
 
             const snake_name    = InputTransformerUtil.toSnakeCase(model_name || "");
-            const file_path     = path.join(this.output_dir, app_id, `${snake_name}.js`);
+            const file_path     = this.ensureDirExists(path.join(this.output_dir, app_id, `${snake_name}.js`));
             const content       = this.generateModelContent(app_id || "", model_name || "");
 
             if (fs.existsSync(file_path)) {
