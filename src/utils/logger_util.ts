@@ -9,7 +9,7 @@ class LoggerUtil {
     private create_log_file: boolean;
     private log_file_path: string;
 
-    constructor(module_name: string, create_log_file: boolean = false) {
+    constructor(module_name: string, create_log_file: boolean = true) {
         this.module_name        = module_name;
         this.create_log_file    = create_log_file;
         this.log_file_path      = this.getLogFilePath();

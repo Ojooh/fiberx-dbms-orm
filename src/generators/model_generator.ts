@@ -12,11 +12,11 @@ import { SchemaDefinitionInterface } from "../types/model_type";
 class ModelGenerator {
     public output_dir: string;
     private logger: LoggerUtil;
-    private readonly module_name = "fiberx_bootstrap_client";
+    private readonly module_name = "model_generator";
 
     constructor(output_dir: string, logger?: LoggerUtil) {
         this.output_dir     = output_dir;
-        this.logger         = logger || new LoggerUtil(this.module_name);
+        this.logger         = logger || new LoggerUtil(this.module_name, true);
     }
 
     // Method to Ensure a directory exists. If it doesn't, creates it.
