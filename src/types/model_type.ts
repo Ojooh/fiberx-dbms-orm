@@ -49,7 +49,7 @@ export interface ColumnDefinition {
     unique?: boolean;
     primary_key?: boolean;
     nullable?: boolean;
-    default?: string | null;
+    default?: string | number | boolean | null;
     on_update?: string;
     references?: { table:string; column: string; on_delete?: ReferentialAction, on_update?: ReferentialAction }
 }
