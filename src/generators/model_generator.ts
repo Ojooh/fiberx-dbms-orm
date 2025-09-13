@@ -35,9 +35,9 @@ class ModelGenerator {
     }
 
     // Generate model content as a string
-    public generateModelContent(app_id: string, model_name: string): string {
+    public generateModelContent(app_id: string, model_name: string, model_snake_name: string ): string {
         const class_name = InputTransformerUtil.toPascalCase(model_name);
-        return modelCodeContent(app_id, class_name);
+        return modelCodeContent(app_id, class_name, model_snake_name);
     }
 
     // Method to generate and write model files from schemas
@@ -52,8 +52,8 @@ class ModelGenerator {
 
             const snake_name    = InputTransformerUtil.toSnakeCase(model_name || "");
             const model_app_dir = this.ensureDirExists(path.join(this.output_dir, app_id));
-            const file_path     = path.join(model_app_dir, `${snake_name}.js`);
-            const content       = this.generateModelContent(app_id || "", model_name || "");
+            const file_path     = path.join(model_app_dir, `${snake_name}_model.ts`);
+            const content       = this.generateModelContent(app_id || "", model_name || "", snake_name);
 
             if (fs.existsSync(file_path)) {
                 this.logger.info(`[${this.module_name}]  ⚠️ Model "${model_name}" already exists at: ${file_path}`);
