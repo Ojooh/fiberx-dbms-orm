@@ -26,7 +26,7 @@ class ${class_name}Model extends BaseSQLModel {
     }
 }
 
-export default ${class_name};
+export default ${class_name}Model;
 `;
 }
 
