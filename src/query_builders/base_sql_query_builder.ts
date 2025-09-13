@@ -6,7 +6,7 @@ import {
 } from "../types/query_builder_type";
 
 import { 
-    SchemaDefinition,
+    SchemaDefinitionInterface,
     QueryBuilderObject,
     DataQueryBuilderObject,
     ChangeDataQueryBuilderObject,
@@ -38,36 +38,36 @@ interface BaseSQLQueryBuilder {
     generateRevokeDatabaseUserPriviledgesQuery(input_params: GrantDatabaseUserPriviledgeParams): string;
 
     // Generate SELECT query
-    generateSelectQuery(input_params: QueryBuilderObject | {}, schema: SchemaDefinition): string;
+    generateSelectQuery(input_params: QueryBuilderObject | {}, schema: SchemaDefinitionInterface): string;
 
     // Generate SELECT COUNT query
-    generateSelectCountQuery(input_params: QueryBuilderObject | {}, schema: SchemaDefinition): string;
+    generateSelectCountQuery(input_params: QueryBuilderObject | {}, schema: SchemaDefinitionInterface): string;
 
     // Generate INSERT query
-    generateInsertQuery(input_params: DataQueryBuilderObject | {}, schema: SchemaDefinition): string;
+    generateInsertQuery(input_params: DataQueryBuilderObject | {}, schema: SchemaDefinitionInterface): string;
 
     // Generate UPDATE query
-    generateUpdateQuery(input_params: ChangeDataQueryBuilderObject | {}, schema: SchemaDefinition): string;
+    generateUpdateQuery(input_params: ChangeDataQueryBuilderObject | {}, schema: SchemaDefinitionInterface): string;
 
     // Generate DELETE query
-    generateDeleteQuery(input_params: ChangeDataQueryBuilderObject | {}, schema: SchemaDefinition): string;
+    generateDeleteQuery(input_params: ChangeDataQueryBuilderObject | {}, schema: SchemaDefinitionInterface): string;
 
     // Generate CREATE TABLE query
-    generateCreateTableQuery(schema: SchemaDefinition): string;
+    generateCreateTableQuery(schema: SchemaDefinitionInterface): string;
 
     // Generate DROP TABLE query
-    generateDropTableQuery(schema: SchemaDefinition): string;
+    generateDropTableQuery(schema: SchemaDefinitionInterface): string;
 
     // Generate ALTER TABLE COLUMN query
-    generateAddNewTableColumnQuery(input_params: ColumnInputParams, schema: SchemaDefinition): string;
+    generateAddNewTableColumnQuery(input_params: ColumnInputParams, schema: SchemaDefinitionInterface): string;
 
     // Generate DROP TABLE COLUMN query
-    generateDropTableColumnQuery(input_params: ColumnInputParams, schema: SchemaDefinition): string;
+    generateDropTableColumnQuery(input_params: ColumnInputParams, schema: SchemaDefinitionInterface): string;
 
     // Generate CREATE COLUMN INDEX query
-    generateAddIndexQuery(input_params: ColumnIndexInputParams, schema: SchemaDefinition): string;
+    generateAddIndexQuery(input_params: ColumnIndexInputParams, schema: SchemaDefinitionInterface): string;
 
     // Generate DROP INDEX query
-    generateRemoveIndexQuery(index_name: string, schema: SchemaDefinition): string;
+    generateRemoveIndexQuery(index_name: string, schema: SchemaDefinitionInterface): string;
 }
 export default BaseSQLQueryBuilder;

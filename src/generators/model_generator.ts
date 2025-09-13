@@ -7,7 +7,7 @@ import LoggerUtil from "../utils/logger_util";
 
 const SUPPORTED_SQL_DIALECTS = ["mysql", "postgres", "sqlite"];
 
-import { SchemaDefinition } from "../types/model_type";
+import { SchemaDefinitionInterface } from "../types/model_type";
 
 class ModelGenerator {
     public output_dir: string;
@@ -41,7 +41,7 @@ class ModelGenerator {
     }
 
     // Method to generate and write model files from schemas
-    public createModelFileFromSchemas(schemas: SchemaDefinition[]): boolean {
+    public createModelFileFromSchemas(schemas: SchemaDefinitionInterface[]): boolean {
         for (const schema of schemas) {
             const { model_name, app_id = "app_models", datasource_type } = schema;
 

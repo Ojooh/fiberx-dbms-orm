@@ -1,8 +1,8 @@
 import BaseSQLModel from "../src/models/base_sql_model"; // Adjust path
-import { SchemaDefinition } from "../src/types/model_type";
+import { SchemaDefinitionInterface } from "../src/types/model_type";
 
 class TestModel extends BaseSQLModel {
-    static schema: SchemaDefinition = {
+    static schema: SchemaDefinitionInterface = {
         id: 17,
         name: "TestSchema",
         app_id: "fibase",

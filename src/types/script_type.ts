@@ -1,4 +1,4 @@
-import { SchemaDefinition  } from "./model_type";
+import { SchemaDefinitionInterface  } from "./model_type";
 import LoggerUtil from "../utils/logger_util";
 
 export interface ConnectionInfo {
@@ -25,7 +25,7 @@ export interface DatasourceRecord {
 
 export interface BootstrapResponse {
     datasources: DatasourceRecord[];
-    schemas: SchemaDefinition[];
+    schemas: SchemaDefinitionInterface[];
 }
 
 export interface BootstrapClientConfig {

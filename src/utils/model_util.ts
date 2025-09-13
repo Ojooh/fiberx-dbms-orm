@@ -1,6 +1,6 @@
 
 import { 
-    SchemaDefinition,
+    SchemaDefinitionInterface,
     FindByPkInputParams,
     Permission,
     QueryBuilderObject,
@@ -296,7 +296,7 @@ class ModelUtil {
     }
 
     // Method to validate find by pk request
-    public static validateFindByPkRequest(input_params: FindByPkInputParams, schema: SchemaDefinition = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
+    public static validateFindByPkRequest(input_params: FindByPkInputParams, schema: SchemaDefinitionInterface = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
         try {
             const app_id = this.global_vars.getVariable("APP_ID");
 
@@ -364,7 +364,7 @@ class ModelUtil {
     }
 
     // Method to validate find one request
-    public static validateFindRequest(input_params: FindInputParams, schema: SchemaDefinition = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
+    public static validateFindRequest(input_params: FindInputParams, schema: SchemaDefinitionInterface = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
         try {
             const app_id = this.global_vars.getVariable("APP_ID");
 
@@ -438,7 +438,7 @@ class ModelUtil {
     }
 
     // Method to validate count request
-    public static validateCountRequest(input_params: CountInputParams, schema: SchemaDefinition = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
+    public static validateCountRequest(input_params: CountInputParams, schema: SchemaDefinitionInterface = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
         try {
             const app_id = this.global_vars.getVariable("APP_ID");
 
@@ -501,7 +501,7 @@ class ModelUtil {
     }
 
     // Method to validate create request
-    public static validateCreateRequest(input_params: DataInputParams, schema: SchemaDefinition = {}): { v_state: boolean; v_msg: string, v_data?: DataQueryBuilderObject } {
+    public static validateCreateRequest(input_params: DataInputParams, schema: SchemaDefinitionInterface = {}): { v_state: boolean; v_msg: string, v_data?: DataQueryBuilderObject } {
         try {
             const app_id = this.global_vars.getVariable("APP_ID");
 
@@ -535,7 +535,7 @@ class ModelUtil {
     }
 
     // Method to validate create request
-    public static validateUpdateRequest(input_params: UpdateDataInputParams, schema: SchemaDefinition = {}): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
+    public static validateUpdateRequest(input_params: UpdateDataInputParams, schema: SchemaDefinitionInterface = {}): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
         try {
             const app_id = this.global_vars.getVariable("APP_ID");
 
@@ -578,7 +578,7 @@ class ModelUtil {
     }
 
     // Method to validate destroy request
-    public static validateDestroyRequest(input_params: DestroyDataInputParams, schema: SchemaDefinition = {}): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
+    public static validateDestroyRequest(input_params: DestroyDataInputParams, schema: SchemaDefinitionInterface = {}): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
         try {
             const app_id = this.global_vars.getVariable("APP_ID");
 

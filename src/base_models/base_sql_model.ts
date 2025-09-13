@@ -2,7 +2,7 @@
 import { 
     AssociationOptions, 
     AssociationDefinition, 
-    SchemaDefinition,
+    SchemaDefinitionInterface,
     FindByPkInputParams,
     FindInputParams,
     CountInputParams,
@@ -22,7 +22,7 @@ import EventSystemUtil from "../utils/event_system_util";
 
 class BaseSQLModel {
     [key: string]: any;
-    static schema: SchemaDefinition = {};
+    static schema: SchemaDefinitionInterface = {};
     static associations: AssociationDefinition[] = [];
 
     constructor(data: Record<string, any> = {}) {
@@ -85,7 +85,7 @@ class BaseSQLModel {
     }
 
     // Method to get a schemas connector from registry
-    private static getSchemaConnector(schema: SchemaDefinition): BaseSQLConnector {
+    private static getSchemaConnector(schema: SchemaDefinitionInterface): BaseSQLConnector {
         const registry          = DataSourceRegistry.getInstance();
         const connector        = registry.getConnector(this.schema?.datasource_name || "");
 

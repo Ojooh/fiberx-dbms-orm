@@ -7,7 +7,7 @@ import {
 } from "../../types/query_builder_type";
 
 import { 
-    SchemaDefinition,
+    SchemaDefinitionInterface,
     QueryBuilderObject,
     DataQueryBuilderObject,
     ChangeDataQueryBuilderObject,
@@ -182,7 +182,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate select query
-    public generateSelectQuery = (input_params: QueryBuilderObject , schema: SchemaDefinition): string => {
+    public generateSelectQuery = (input_params: QueryBuilderObject , schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "" } = schema;
             const {  
@@ -211,7 +211,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate a select count query
-    public generateSelectCountQuery = (input_params: QueryBuilderObject , schema: SchemaDefinition): string => {
+    public generateSelectCountQuery = (input_params: QueryBuilderObject , schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "" } = schema;
             const {  
@@ -239,7 +239,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate insert query
-    public generateInsertQuery = (input_params: DataQueryBuilderObject , schema: SchemaDefinition): string => {
+    public generateInsertQuery = (input_params: DataQueryBuilderObject , schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "" } = schema;
             const {  record_data = [], ignore_duplicates = false } = input_params;
@@ -262,7 +262,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate update query
-    public generateUpdateQuery = (input_params: ChangeDataQueryBuilderObject , schema: SchemaDefinition): string => {
+    public generateUpdateQuery = (input_params: ChangeDataQueryBuilderObject , schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "" } = schema;
             const {  record_data = [],  where } = input_params;
@@ -285,7 +285,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate delete query
-    public generateDeleteQuery = (input_params: ChangeDataQueryBuilderObject , schema: SchemaDefinition): string => {
+    public generateDeleteQuery = (input_params: ChangeDataQueryBuilderObject , schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "" } = schema;
             const { where } = input_params;
@@ -304,7 +304,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate CREATE TABLE query
-    public generateCreateTableQuery = (schema: SchemaDefinition): string => {
+    public generateCreateTableQuery = (schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "", columns = {}, primary_key = "" } = schema;
 
@@ -321,7 +321,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate DROP TABLE query
-    public generateDropTableQuery = (schema: SchemaDefinition): string => {
+    public generateDropTableQuery = (schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "", columns = {}, primary_key = "" } = schema;
 
@@ -336,7 +336,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate ALTER TABLE COLUMN query
-    public generateAddNewTableColumnQuery = (input_params: ColumnInputParams, schema: SchemaDefinition): string => {
+    public generateAddNewTableColumnQuery = (input_params: ColumnInputParams, schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "", columns = {}, primary_key = "" } = schema;
             const { column_name }       = input_params;
@@ -358,7 +358,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             else if (before_column_name) { pos_clause = `BEFORE ${QueryFormatterUtil.escapeField(before_column_name, this.quote_char)}`; }
 
             const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
-            const col_definition_sql                = QueryFormatterUtil.generateColumnDefinition(column_name, column_definition, table_name, this.dialect_options);
+            const col_definition_sql                = QueryFormatterUtil.generateColumnDefinitionInterface(column_name, column_definition, table_name, this.dialect_options);
             const column_sql_clause                 = col_definition_sql.join(" ");
 
             const query = `ALTER TABLE ${sanitized_table_name} ADD COLUMN ${column_sql_clause} ${pos_clause};`;
@@ -370,7 +370,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate DROP TABLE COLUMN query
-    public generateDropTableColumnQuery = (input_params: ColumnInputParams, schema: SchemaDefinition): string => {
+    public generateDropTableColumnQuery = (input_params: ColumnInputParams, schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "", columns = {} } = schema;
             const { column_name }           = input_params;
@@ -386,7 +386,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate CREATE COLUMN INDEX query
-    public generateAddIndexQuery = (input_params: ColumnIndexInputParams, schema: SchemaDefinition): string => {
+    public generateAddIndexQuery = (input_params: ColumnIndexInputParams, schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "", columns = {} } = schema;
             const { fields, unique }        = input_params;
@@ -417,7 +417,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate DROP INDEX query
-    public generateRemoveIndexQuery = (index_name: string, schema: SchemaDefinition): string => {
+    public generateRemoveIndexQuery = (index_name: string, schema: SchemaDefinitionInterface): string => {
         try {
             const { table_name = "" } = schema;
 
