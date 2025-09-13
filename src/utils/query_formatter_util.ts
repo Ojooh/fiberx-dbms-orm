@@ -2,7 +2,7 @@
 import { 
     InputParamsOptions,
     IncludeQuery,
-    ColumnDefinitionInterface
+    ColumnDefinition
 } from "../types/model_type";
 
 import {
@@ -343,7 +343,7 @@ class QueryFormatterUtil {
     }
 
     // Private Method to genetae column definition query
-    public static generateColumnDefinitionInterface (column_name: string, column_definition: ColumnDefinitionInterface, table_name: string, dialect_options: DialectOptions): string[] {
+    public static generateColumnDefinition (column_name: string, column_definition: ColumnDefinition, table_name: string, dialect_options: DialectOptions): string[] {
         const column_sql = [];
         const { quote_char, data_type_mapper } = dialect_options;
         const { 
@@ -382,11 +382,11 @@ class QueryFormatterUtil {
     }
 
     // Method to retrun create table columns 
-    public static generateColumnsDefinitionClause (columns:Record<string, ColumnDefinitionInterface>, primary_key: string, table_name: string, dialect_options: DialectOptions): string[] {
+    public static generateColumnsDefinitionClause (columns:Record<string, ColumnDefinition>, primary_key: string, table_name: string, dialect_options: DialectOptions): string[] {
         const column_def_clause = []
        
         for (const [col, def] of Object.entries(columns)) {
-            const col_definition_sql = this.generateColumnDefinitionInterface(col, def, table_name, dialect_options);
+            const col_definition_sql = this.generateColumnDefinition(col, def, table_name, dialect_options);
 
             column_def_clause.push(col_definition_sql.join(" "));
         }

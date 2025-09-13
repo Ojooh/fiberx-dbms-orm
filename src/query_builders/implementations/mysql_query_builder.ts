@@ -358,7 +358,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             else if (before_column_name) { pos_clause = `BEFORE ${QueryFormatterUtil.escapeField(before_column_name, this.quote_char)}`; }
 
             const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
-            const col_definition_sql                = QueryFormatterUtil.generateColumnDefinitionInterface(column_name, column_definition, table_name, this.dialect_options);
+            const col_definition_sql                = QueryFormatterUtil.generateColumnDefinition(column_name, column_definition, table_name, this.dialect_options);
             const column_sql_clause                 = col_definition_sql.join(" ");
 
             const query = `ALTER TABLE ${sanitized_table_name} ADD COLUMN ${column_sql_clause} ${pos_clause};`;

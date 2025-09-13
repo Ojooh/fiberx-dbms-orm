@@ -43,25 +43,25 @@ export interface ColumnType {
 export type ReferentialAction = "CASCADE"| "SET NULL"| "SET DEFAULT"| "RESTRICT"| "NO ACTION" | string;
 
 
-export interface ColumnDefinitionInterface {
+export interface ColumnDefinition {
     type: ColumnType;
     auto_increment?: boolean;
     unique?: boolean;
     primary_key?: boolean;
     nullable?: boolean;
-    default?: string | number | boolean | null;
+    default?: string | null;
     on_update?: string;
     references?: { table:string; column: string; on_delete?: ReferentialAction, on_update?: ReferentialAction }
 }
 
-export interface IndexDefinitionInterface { fields: string[]; unique: boolean; }
+export interface IndexDefinition { fields: string[]; unique: boolean; }
 
-export type PermissionType = "read" | "create" | "update" | "delete";
+export type Permission = "read" | "create" | "update" | "delete";
 
 export interface SchemaDefinitionInterface {
     id?: number;
-    name: string;
-    app_id: string;
+    name?: string;
+    app_id?: string;
     table_name?: string;
     model_name?: string;
     datasource_name?: string;
@@ -69,9 +69,9 @@ export interface SchemaDefinitionInterface {
     primary_key?: string;
     migration_priority?: number;
     timestamps?: 0 | 1 | boolean;
-    permissions?: PermissionType[];
-    columns?: Record<string, ColumnDefinitionInterface>;
-    indexes?: IndexDefinitionInterface[];
+    permissions?: Permission[];
+    columns?: Record<string, ColumnDefinition>;
+    indexes?: IndexDefinition[];
     status?: "PENDING" | "ACTIVE" | "DEPRECATED" | string;
 }
 
