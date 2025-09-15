@@ -191,7 +191,7 @@ class ModelUtil {
 
     // Method to validate options fields
     private static validateOptions(options: InputParamsOptions, valid_columns: string[], table_name: string = ""): { v_state: boolean; v_msg: string; v_data?: InputParamsOptions | {} } {
-        const { limit = undefined, offset = 0, order_by = "", order_direction, lock = "", transaction_id = "", distinct = false } = options;
+        const { limit = undefined, offset = undefined, order_by = "", order_direction, lock = "", transaction_id = "", distinct = false } = options;
         const v_data: Partial<InputParamsOptions> = {};
 
         // Validate order_by column
