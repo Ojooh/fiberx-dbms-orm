@@ -78,9 +78,10 @@ class MySQLConnector implements BaseSQLConnector {
     }
 
     // Method to disconnect from database
-    public disconnect = async (connection_id: string = "default"): Promise<boolean> => {
+    public disconnect = async (connection_id: string = ""): Promise<boolean> => {
         try {
-            const connection_to_terminate = this.pools.get(connection_id);
+            const _connection_id = connection_id && connection_id != "" ? connection_id : "default";
+            const connection_to_terminate = this.pools.get(_connection_id);
 
             if (!connection_to_terminate) {
                 this.logger.error(`[${this.module_name}] Failed to close "${connection_id}" — it does not exist.`);
@@ -163,9 +164,11 @@ class MySQLConnector implements BaseSQLConnector {
     // Method Execute a query with optional connection ID
     public executeQuery = async (query: string, params: QueryParams = {} ): Promise<ExecuteQueryResult> => {
         try {
-            const { transaction_id = "default" } = params;
+            const { transaction_id = "" } = params;
 
-            const conn = this.pools.get(transaction_id);
+            const connection_id = transaction_id && transaction_id != "" ? transaction_id : "default";
+
+            const conn = this.pools.get(connection_id);
 
             if (!conn) { throw new Error(`No pool/connection found for id "${transaction_id}"`); }
 
