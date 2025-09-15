@@ -51,7 +51,8 @@ class LoggerUtil {
     private log(message: string = "", data_error: any = {}, level: LogLevel = "INFO"): LogObject {
         const timestamp             = new Date().toISOString();
         const error_str             = data_error && Object.keys(data_error).length ? this.safeStringify(data_error, 0) : "";
-        const log_msg               = `${timestamp} [${level}] ${message} ${error_str}\n`;
+        const formatted_message     = message.startsWith(`[${this.module_name}]`)  ? message  : `[${this.module_name}] ${message}`;
+        const log_msg               = `${timestamp} [${level}] ${formatted_message} ${error_str}\n`;
         const log_object: LogObject = { timestamp, status: level, message, data_error: data_error };
 
         if (this.create_log_file) { fs.appendFileSync(this.log_file_path, log_msg); }
