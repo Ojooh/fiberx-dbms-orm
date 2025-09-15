@@ -85,7 +85,7 @@ class ModelUtil {
                 return { v_state: false, v_msg: `Invalid field: "${field}" does not exist on table "${table_name}".`};
             }
 
-            resolved_fields.push(`${table_name}.${resolved}`);
+            resolved_fields.push(`${resolved}`);
         }
 
         return { v_state: true, v_msg: "valid_columns", v_data: resolved_fields };
