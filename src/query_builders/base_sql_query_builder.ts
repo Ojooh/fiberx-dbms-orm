@@ -7,6 +7,7 @@ import {
 
 import { 
     SchemaDefinitionInterface,
+    ColumnDefinition,
     QueryBuilderObject,
     DataQueryBuilderObject,
     ChangeDataQueryBuilderObject,
@@ -59,7 +60,7 @@ interface BaseSQLQueryBuilder {
     generateDropTableQuery(schema: SchemaDefinitionInterface): string;
 
     // Generate ALTER TABLE COLUMN query
-    generateAddNewTableColumnQuery(input_params: ColumnInputParams, schema: SchemaDefinitionInterface): string;
+    generateAddNewTableColumnQuery(input_params: ColumnInputParams, schema: SchemaDefinitionInterface, custom_col_definition: ColumnDefinition | null): string;
 
     // Generate DROP TABLE COLUMN query
     generateDropTableColumnQuery(input_params: ColumnInputParams, schema: SchemaDefinitionInterface): string;

@@ -7,6 +7,7 @@ import {
 } from "../../types/query_builder_type";
 
 import { 
+    ColumnDefinition,
     SchemaDefinitionInterface,
     QueryBuilderObject,
     DataQueryBuilderObject,
@@ -336,11 +337,11 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate ALTER TABLE COLUMN query
-    public generateAddNewTableColumnQuery = (input_params: ColumnInputParams, schema: SchemaDefinitionInterface): string => {
+    public generateAddNewTableColumnQuery = (input_params: ColumnInputParams, schema: SchemaDefinitionInterface, custom_col_definition: ColumnDefinition | null = null ): string => {
         try {
             const { table_name = "", columns = {}, primary_key = "" } = schema;
             const { column_name }       = input_params;
-            const column_definition     = columns[column_name];
+            const column_definition     = custom_col_definition || columns[column_name];
             const valid_columns         = Object.keys(columns);
             const column_index          = valid_columns.findIndex((valid_column_name) => { return valid_column_name === column_name } );
 
