@@ -51,6 +51,31 @@ class MigrationGenerator {
         return updateMigrationCodeContent(app_id, class_name, class_snake_case, migration_diff);
     }
 
+    // Method to generate and write migration files from schemas
+    public createMigrationFileFromSchemas(
+        file_name: string, 
+        initial: boolean, 
+        app_id: string, 
+        schema_name: string, 
+        migration_diff: SchemaSnapshotDifferenceInterface
+    ): boolean {
+
+        const file_path     = path.join(this.output_dir, file_name);
+        const content       = initial ? 
+            this.generateInitialMigrationContent(app_id, schema_name) :
+            this.generateUpdateMigrationContent(app_id, schema_name, migration_diff);
+
+        if (fs.existsSync(file_path)) {
+            this.logger.info(`[${this.module_name}]  ⚠️ Migration "${file_name}" already exists at: ${file_path}`);
+            return false;
+        }
+
+        fs.writeFileSync(file_path, content, 'utf8');
+        this.logger.success(`[${this.module_name}]  ✅ Migration "${file_name}" generated at: ${file_path}`);
+
+        return true;
+    }
+
 }
 
 export default MigrationGenerator;
