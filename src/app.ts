@@ -16,6 +16,10 @@ import GlobalVariableManager from "./utils/global_variable_manager_util";
 import ModelGenerator from "./generators/model_generator";
 import FiberXBootstrapClient from "./scripts/fiberx_bootstrap_client";
 
+// === Types ===
+import BaseSQLConnector from "./data_sources/connectors/base_sql_connector";
+import SQLQueryBuilder from "./query_builders/base_sql_query_builder";
+
 // === Fiberx Main Interface ===
 const Fiberx = {
   DataTypes,
@@ -39,6 +43,8 @@ export {
   DataSourceRegistry,
 
   BaseSQLModel,
+  BaseSQLConnector,
+  SQLQueryBuilder,
 
   LoggerUtil,
   GlobalVariableManager,
