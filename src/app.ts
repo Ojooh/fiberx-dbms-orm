@@ -14,6 +14,7 @@ import GlobalVariableManager from "./utils/global_variable_manager_util";
 
 // === Scripts ===
 import ModelGenerator from "./generators/model_generator";
+import MigrationGenerator from "./generators/migration_generator";
 import FiberXBootstrapClient from "./scripts/fiberx_bootstrap_client";
 
 // === Types ===
@@ -31,6 +32,7 @@ const Fiberx = {
   GlobalVariableManager,
 
   ModelGenerator,
+  MigrationGenerator,
   FiberXBootstrapClient
 };
 
@@ -50,5 +52,6 @@ export {
   GlobalVariableManager,
 
   ModelGenerator,
+  MigrationGenerator,
   FiberXBootstrapClient
 };

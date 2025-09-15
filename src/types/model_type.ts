@@ -75,6 +75,21 @@ export interface SchemaDefinitionInterface {
     status?: "PENDING" | "ACTIVE" | "DEPRECATED" | string;
 }
 
+export interface ColumnsAlteredInterface {
+    column_name: string;
+    old_def: ColumnDefinition;
+    new_def: ColumnDefinition;
+}
+
+export interface SchemaSnapshotDifferenceInterface {
+    columns_to_add: string[];
+    columns_to_remove: string[];
+    columns_to_alter: ColumnsAlteredInterface[];
+    indexes_to_add: IndexDefinition[];
+    indexes_to_remove: IndexDefinition[];
+    create_table: boolean;
+}
+
 export interface IncludeOptions {
     limit?: number;
     offset?: number;
