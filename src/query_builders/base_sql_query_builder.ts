@@ -68,6 +68,6 @@ interface BaseSQLQueryBuilder {
     generateAddIndexQuery(input_params: ColumnIndexInputParams, schema: SchemaDefinitionInterface): string;
 
     // Generate DROP INDEX query
-    generateRemoveIndexQuery(index_name: string, schema: SchemaDefinitionInterface): string;
+    generateRemoveIndexQuery(input_params: ColumnIndexInputParams, schema: SchemaDefinitionInterface): string;
 }
 export default BaseSQLQueryBuilder;

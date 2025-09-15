@@ -417,16 +417,24 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     }
 
     // Method to generate DROP INDEX query
-    public generateRemoveIndexQuery = (index_name: string, schema: SchemaDefinitionInterface): string => {
+    public generateRemoveIndexQuery = (input_params: ColumnIndexInputParams, schema: SchemaDefinitionInterface): string => {
         try {
-            const { table_name = "" } = schema;
+            const { table_name = "", columns = {} } = schema;
+            const { fields, unique }        = input_params;
+            const valid_columns         = Object.keys(columns);
 
-            if (!index_name || typeof index_name !== "string") {
-                this.handleError("generateRemoveIndexQuery", `Index name must be a non-empty string`);
+            if(!fields || !Array.isArray(fields) || !fields.length) {
+                this.handleError("generateAddIndexQuery", `Index fields params must be an array of column names`);
             }
 
-            const sanitized_table_name = QueryFormatterUtil.escapeField(table_name, this.quote_char);
-            const sanitized_index_name = QueryFormatterUtil.escapeField(index_name, this.quote_char);
+            const has_invalid_element = fields.some(el => !valid_columns.includes(el));
+
+            if (has_invalid_element) {
+                this.handleError("generateAddIndexQuery", `Index fields contain one or more invalid columns in table ${table_name}`);
+            }
+
+            const sanitized_table_name      = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const sanitized_index_name      = QueryFormatterUtil.escapeField(`idx_${table_name}_${fields.join('_')}`, this.quote_char);
 
             const query = `DROP INDEX ${sanitized_index_name} ON ${sanitized_table_name};`;
 
