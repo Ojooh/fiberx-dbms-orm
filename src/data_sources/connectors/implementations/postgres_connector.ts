@@ -70,7 +70,13 @@ class PostgresConnector implements BaseSQLConnector {
 
             if(database) { 
                 const database_params = { database_name: database, collation, charset };
-                this.sql_admin.createNewDatabase(database_params); 
+                const created = this.sql_admin.createNewDatabase(database_params);
+                
+                if(!created) {
+                    throw new Error(`Failed to create Database ${database_params}`)
+                }
+
+                this.logger.success(`Database ${database} created sucessfully`)
             }
 
             return true;
