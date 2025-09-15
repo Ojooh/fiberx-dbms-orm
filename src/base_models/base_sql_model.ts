@@ -201,7 +201,7 @@ class BaseSQLModel {
         try {
             const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
 
-            if(!v_state || !v_data) { this.handleError("findOne", v_msg); }
+            if(!v_state || !v_data) { this.handleError("findAll", v_msg); }
 
             const transaction_id    = v_data?.transaction_id || "";
             const connector         = this.getSchemaConnector(this.schema);

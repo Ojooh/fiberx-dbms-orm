@@ -31,7 +31,7 @@ class ModelUtil {
 
     private static validateCondition = (key: string, value: any, valid_columns: string[],  table_name: string = ""): boolean => {
         // Handle logical operators: and, or
-        if (this.logical_ops.includes(key)) {
+        if (this.logical_ops.includes(key.toLowerCase())) {
             if (!Array.isArray(value)) return false;
 
             return value.every((cond: any) =>
