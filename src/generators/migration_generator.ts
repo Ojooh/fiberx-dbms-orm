@@ -52,7 +52,7 @@ class MigrationGenerator {
     }
 
     // Method to generate and write migration files from schemas
-    public createMigrationFileFromSchemas(
+    public createMigrationFileFromSchema(
         file_name: string, 
         initial: boolean, 
         app_id: string, 
