@@ -10,6 +10,7 @@ import BaseSQLModel from "./base_models/base_sql_model";
 
 // === Utilities ===
 import LoggerUtil from "./utils/logger_util";
+import EventSystemUtil from "./utils/event_system_util";
 import GlobalVariableManager from "./utils/global_variable_manager_util";
 
 // === Scripts ===
@@ -29,6 +30,7 @@ const Fiberx = {
   BaseSQLModel,
 
   LoggerUtil,
+  EventSystemUtil,
   GlobalVariableManager,
 
   ModelGenerator,
@@ -49,6 +51,7 @@ export {
   SQLQueryBuilder,
 
   LoggerUtil,
+  EventSystemUtil,
   GlobalVariableManager,
 
   ModelGenerator,
