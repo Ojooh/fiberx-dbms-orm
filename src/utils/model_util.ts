@@ -24,7 +24,7 @@ import GlobalVariableManagerUtil from "./global_variable_manager_util";
 class ModelUtil {
 
     static global_vars          = GlobalVariableManagerUtil.getInstance();
-    static valid_operators      = ["=", ">", ">=", "<", "<=", "in", "like", "is", "is_not"];
+    static valid_operators      = ["=", "!=", ">", ">=", "<", "<=", "in", "like", "is", "is_not"];
     static logical_ops          = ["and", "or"];
 
     private static isObject     = (obj: any): boolean => { return obj && typeof obj === "object" && !Array.isArray(obj); }
