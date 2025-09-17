@@ -12,7 +12,7 @@ class ${class_name}Seeder extends BaseSeeder {
     }
 
     // Override to provide seed data
-    protected getSeedData(): any[] {
+    protected async getSeedData(): Promise<any[]> {
         return [];
     }
 }
