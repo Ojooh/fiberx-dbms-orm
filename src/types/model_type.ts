@@ -104,7 +104,7 @@ export interface IncludeMeta {
     fields?: string[];
     includes?: IncludeMeta[];
     required?: boolean;
-    options: IncludeOptions
+    options?: IncludeOptions
 }
 
 export interface IncludeQuery {
