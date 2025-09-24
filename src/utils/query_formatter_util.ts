@@ -112,7 +112,7 @@ class QueryFormatterUtil {
         } = input_params;
 
         const alias                 = target_alias || target_table_name;
-        const fields_clause         = this.generateFieldsCluase(target_fields, alias, quote_char);
+        const fields_clause         = this.generateFieldsCluase(target_fields, alias, quote_char, true);
         const type                  = target_required ? 'INNER' : 'LEFT';
         const left                  = this.escapeQualifiedField(association_type === 'belongsTo' ? `${alias}.${target_key}` : `${base_table_name}.${foreign_key}`);
         const right                 = this.escapeQualifiedField(association_type === 'belongsTo' ? `${base_table_name}.${foreign_key}` : `${alias}.${target_key}`);
@@ -218,12 +218,23 @@ class QueryFormatterUtil {
     };
 
     // MEthod to return fields clause array
-    public static generateFieldsCluase(fields: string[], table_name: string, quote_char: string = "`"): string[] {
+    public static generateFieldsCluase(fields: string[], table_name: string, quote_char: string = "`", use_alias: boolean = false): string[] {
         const sanitized_table_name = this.escapeField(table_name, quote_char);
 
         if (!Array.isArray(fields) || fields.length <= 0) { return [`${sanitized_table_name}.*`]; }
 
-        return fields.map(field => `${sanitized_table_name}.${this.escapeField(field, quote_char)}` );
+        return fields.map(field => {
+            const sanitized_field   = this.escapeField(field, quote_char);
+            const base              = `${sanitized_table_name}.${sanitized_field}`;
+
+            if (use_alias) {
+                // Alias as table.field → makes it easier to parse into nested objects
+                const alias     = `${table_name}.${field}`;
+                return `${base} AS ${quote_char}${alias}${quote_char}`;
+            }
+
+            return base;
+        });
     }
 
     // Method to return where clause array
