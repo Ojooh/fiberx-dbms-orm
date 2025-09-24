@@ -111,8 +111,8 @@ class QueryFormatterUtil {
             target_where, target_alias, target_required, quote_char
         } = input_params;
 
-        const fields_clause         = this.generateFieldsCluase(target_fields, target_table_name, quote_char);
         const alias                 = target_alias || target_table_name;
+        const fields_clause         = this.generateFieldsCluase(target_fields, alias, quote_char);
         const type                  = target_required ? 'INNER' : 'LEFT';
         const left                  = this.escapeQualifiedField(association_type === 'belongsTo' ? `${alias}.${target_key}` : `${base_table_name}.${foreign_key}`);
         const right                 = this.escapeQualifiedField(association_type === 'belongsTo' ? `${base_table_name}.${foreign_key}` : `${alias}.${target_key}`);
