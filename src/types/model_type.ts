@@ -152,29 +152,34 @@ export interface CountInputParams {
 export interface SingleDataInputParams {
     record_data?: Record<string, any>;
     options?: { transaction_id?: string; };
+    trigger_hook?: boolean;
 }
 
 export interface DataInputParams {
     record_data?: Record<string, any>[];
     options?: { transaction_id?: string; ignore_duplicates?: boolean };
+    trigger_hook?: boolean;
 }
 
 export interface UpdateDataInputParams {
     record_data?: Record<string, any>;
     where: Record<string, any>;
     options?: { transaction_id?: string; };
+    trigger_hook?: boolean;
 }
 
 export interface AdjustNumericColumnParams {
     field: string;
     amount?: number;
     where: Record<string, any>;
-    options?: { transaction_id?: string }
+    options?: { transaction_id?: string };
+    trigger_hook?: boolean;
 }
 
 export interface DestroyDataInputParams {
     where: Record<string, any>;
     options?: { transaction_id?: string; };
+    trigger_hook?: boolean;
 }
 
 

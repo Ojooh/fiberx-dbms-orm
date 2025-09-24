@@ -98,6 +98,7 @@ class BaseSQLModel {
     private static async adjustNumericField(op: "+" | "-", input: AdjustNumericColumnParams): Promise<number> {
         const { field, amount = 1, where, options } = input;
 
+        const trigger_hook          = input?.trigger_hook ?? true;
         const action                = op === "+" ? "increment" : "decrement";
         const connector             = this.getSchemaConnector(this.schema);
         const { quote_char }        = connector.query_builder;
@@ -111,12 +112,14 @@ class BaseSQLModel {
 
         if (!v_state || !v_data) this.handleError(`adjustNumericField(${op})`, v_msg);
 
-        this.emitHook(`before_${action}`, v_data);
+        if(trigger_hook) {  this.emitHook(`before_${action}`, v_data); }
+
         const transaction_id        = v_data.transaction_id || "";
         const sql_query             = connector.query_builder.generateUpdateQuery(v_data, this.schema);
         const { affected_rows = 0 } = await connector.executeQuery(sql_query, { transaction_id });
 
-        this.emitHook(`after_${action}`, v_data, { affected_rows });
+        if(trigger_hook) {  this.emitHook(`after_${action}`, v_data, { affected_rows }); }
+
         return affected_rows;
     }
 
@@ -282,12 +285,14 @@ class BaseSQLModel {
         try {
             const record_data           = input_params?.record_data ?? {};
             const options               = input_params?.options ?? {};
+            const trigger_hook          = input_params?.trigger_hook ?? true
             const create_data_params    = { record_data: [record_data], options };
             const { v_state, v_msg, v_data } = ModelUtil.validateCreateRequest(create_data_params, this.schema);
 
             if (!v_state || !v_data) { this.handleError("create", v_msg); }
 
-            this.emitHook("before_create", v_data);
+            if(trigger_hook) { this.emitHook("before_create", v_data); }
+
             const transaction_id        = v_data.transaction_id || "";
             const connector             = this.getSchemaConnector(this.schema);
             const insert_sql_query      = connector.query_builder.generateInsertQuery(v_data, this.schema);
@@ -306,7 +311,8 @@ class BaseSQLModel {
 
             const new_record = new this(select_result?.rows[0]);
 
-            this.emitHook("after_create", v_data, { new_record });
+            if(trigger_hook) { this.emitHook("after_create", v_data, { new_record }); }
+
             return new_record
         } 
         catch (error: unknown) { this.handleError("create", error); }
@@ -334,17 +340,20 @@ class BaseSQLModel {
     // Method to handle create a new record
     public static async update(input_params: UpdateDataInputParams): Promise<number>  {
         try {
+            const trigger_hook          = input_params?.trigger_hook ?? true
             const { v_state, v_msg, v_data } = ModelUtil.validateUpdateRequest(input_params, this.schema);
 
             if (!v_state || !v_data) { this.handleError("update", v_msg); }
 
-            this.emitHook("before_update", input_params);
+            if(trigger_hook) { this.emitHook("before_update", input_params); }
+
             const transaction_id        = v_data.transaction_id || "";
             const connector             = this.getSchemaConnector(this.schema);
             const sql_query             = connector.query_builder.generateUpdateQuery(v_data, this.schema);
             const { affected_rows = 0 } = await connector.executeQuery(sql_query, { transaction_id });
 
-            this.emitHook("after_update", input_params, { affected_rows });
+            if(trigger_hook) { this.emitHook("after_update", input_params, { affected_rows }); }
+
             return affected_rows;
         } 
         catch (error: unknown) { this.handleError("update", error); }
@@ -365,18 +374,20 @@ class BaseSQLModel {
     // Method to handle create a new record
     public static async destroy(input_params: DestroyDataInputParams): Promise<number>  {
         try {
-            const { v_state, v_msg, v_data } = ModelUtil.validateDestroyRequest(input_params, this.schema);
+            const trigger_hook                  = input_params?.trigger_hook ?? true;
+            const { v_state, v_msg, v_data }    = ModelUtil.validateDestroyRequest(input_params, this.schema);
 
             if (!v_state || !v_data) { this.handleError("destroy", v_msg); }
 
-            this.emitHook("before_destroy", v_data);
+            if(trigger_hook) { this.emitHook("before_destroy", v_data); }
 
             const transaction_id        = v_data.transaction_id || "";
             const connector             = this.getSchemaConnector(this.schema);
             const sql_query             = connector.query_builder.generateDeleteQuery(v_data, this.schema);
             const { affected_rows = 0 } = await connector.executeQuery(sql_query, { transaction_id });
 
-            this.emitHook("after_destroy", v_data, { affected_rows });
+            if(trigger_hook) { this.emitHook("after_destroy", v_data, { affected_rows }); }
+            
             return affected_rows;
         } 
         catch (error: unknown) { this.handleError("destroy", error); }
