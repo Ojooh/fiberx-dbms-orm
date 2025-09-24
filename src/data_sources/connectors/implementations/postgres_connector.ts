@@ -179,6 +179,8 @@ class PostgresConnector implements BaseSQLConnector {
 
             if (!conn) { throw new Error(`No pool/connection found for id "${transaction_id}"`); }
 
+            this.logger.info(`Executing Query [${connection_id}]:`, { query });
+            
             const result        = await conn.query(query);
             const rows          = result?.rows || [];
             const command       = result?.command || "";
