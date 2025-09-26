@@ -12,7 +12,9 @@ interface BaseSQLConnector {
 
     query_builder: SQLQueryBuilder;
 
-    sql_admin: BaseSQLAdmin
+    sql_admin: BaseSQLAdmin;
+
+    model_name: string;
 
     connect(connectionParams: ConnectionParams): Promise<boolean>;
 

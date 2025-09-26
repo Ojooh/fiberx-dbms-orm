@@ -86,12 +86,12 @@ class BaseSQLModel {
 
     // Method to get a schemas connector from registry
     private static getSchemaConnector(schema: SchemaDefinitionInterface): BaseSQLConnector {
-        const registry          = DataSourceRegistry.getInstance();
+        const registry         = DataSourceRegistry.getInstance();
         const connector        = registry.getConnector(this.schema?.datasource_name || "");
 
         if (!connector) { this.handleError("getSchemaConnector", `No connector found for schema data source: ${this.schema?.datasource_name}`) }
 
-
+        connector.model_name    = schema?.model_name || ""
         return connector
     }
 
@@ -387,7 +387,7 @@ class BaseSQLModel {
             const { affected_rows = 0 } = await connector.executeQuery(sql_query, { transaction_id });
 
             if(trigger_hook) { this.emitHook("after_destroy", v_data, { affected_rows }); }
-            
+
             return affected_rows;
         } 
         catch (error: unknown) { this.handleError("destroy", error); }

@@ -8,6 +8,7 @@ import LoggerUtil from "../../../utils/logger_util";
 import UUIDGeneratorUtil from "../../../utils/uuid_gen_util";
 import QueryBuilderMapper from "../../../query_builders/query_builder_mapper";
 import SQLQueryBuilder from "../../../query_builders/base_sql_query_builder";
+import InputTransformerUtil from "../../../utils/input_transformer_util";
 
 import { 
     ConnectionParams, 
@@ -21,7 +22,8 @@ class PostgresConnector implements BaseSQLConnector {
     private logger: LoggerUtil;
     private readonly pools: Map<string, Pool | PoolClient>;
     public query_builder: SQLQueryBuilder;
-    public sql_admin: BaseSQLAdmin
+    public sql_admin: BaseSQLAdmin;
+    public model_name: string;
 
     constructor( logger?: LoggerUtil) {
         this.module_name        = "postgres_connector";
@@ -30,6 +32,7 @@ class PostgresConnector implements BaseSQLConnector {
         this.logger             = logger ?? new LoggerUtil(this.module_name, true);
         this.query_builder      = QueryBuilderMapper.getQueryBuilder("postgres");
         this.sql_admin          = new SQLAdmin(this, this.logger);
+        this.model_name         = "";
     }
 
     // Method to handle error
@@ -179,7 +182,8 @@ class PostgresConnector implements BaseSQLConnector {
 
             if (!conn) { throw new Error(`No pool/connection found for id "${transaction_id}"`); }
 
-            this.logger.info(`Executing Query [${connection_id}]:`, { query });
+            const log_module_name = InputTransformerUtil.toSnakeCase(this.model_name || this.module_name);
+            this.logger.info(`[${log_module_name}] [${connection_id}] Executing Query:`, { query });
             
             const result        = await conn.query(query);
             const rows          = result?.rows || [];
