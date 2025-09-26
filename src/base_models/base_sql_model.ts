@@ -91,7 +91,7 @@ class BaseSQLModel {
 
         if (!connector) { this.handleError("getSchemaConnector", `No connector found for schema data source: ${this.schema?.datasource_name}`) }
 
-        connector.model_name    = schema?.model_name || ""
+        connector.model_name    = schema?.model_name ? `${schema.model_name}Model`: ""
         return connector
     }
 
