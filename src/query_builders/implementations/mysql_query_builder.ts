@@ -79,7 +79,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = query_clauses.join(" ");
 
-            this.logger.success(`[${this.module_name}] Query generated`);
 
             return query
         }
@@ -95,7 +94,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `DROP DATABASE IF EXISTS \`${sanitized_database_name}\`;`;
 
-            this.logger.success(`[${this.module_name}] DROP DATABASE query generated`);
 
             return query;
         } 
@@ -112,7 +110,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             const sanitized_host            = QueryFormatterUtil.sanitizeInput(host, "host");
             const query                     = `CREATE USER IF NOT EXISTS \`${sanitized_username}\`@\`${sanitized_host}\` IDENTIFIED BY '${sanitized_password}';`;
 
-            this.logger.success(`[${this.module_name}] Query generated`);
 
             return query
         }
@@ -128,7 +125,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             const sanitized_host        = QueryFormatterUtil.sanitizeInput(host, "host");
             const query                 = `DROP USER IF EXISTS \`${sanitized_username}\`@\`${sanitized_host}\`;`;
 
-            this.logger.success(`[${this.module_name}] DROP USER query generated`);
 
             return query;
         } 
@@ -151,7 +147,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `GRANT ${privileges_clause} ON ${resource_clause} TO ${user_spec_clause};`;
 
-            this.logger.success(`[${this.module_name}] GRANT query generated`);
 
             return query;
         } 
@@ -175,7 +170,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `REVOKE ${privileges_clause} ON ${resource_clause} FROM ${user_spec_clause};`;
 
-            this.logger.success(`[${this.module_name}] REVOKE query generated`);
 
             return query.trim();
         } 
@@ -205,7 +199,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `SELECT ${all_fields_clause} FROM ${sanitized_table_name} ${joins_clause} ${where_clause} ${options_clause};`;
 
-            this.logger.success(`[${this.module_name}] SELECT query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateSelectQuery", error); }
@@ -233,7 +226,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `SELECT ${all_fields_clause} FROM ${sanitized_table_name} ${joins_clause} ${where_clause} ${options_clause};`;
 
-            this.logger.success(`[${this.module_name}] SELECT COUNT query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateSelectCountQuery", error); }
@@ -256,7 +248,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `INSERT ${ignore_clause} INTO ${sanitized_table_name} ${column_names_clause} VALUES ${column_values_clause};`;
 
-            this.logger.success(`[${this.module_name}] INSERT query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateInsertQuery", error); }
@@ -279,7 +270,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `UPDATE ${sanitized_table_name} SET ${set_clause} ${where_clause};`;
 
-            this.logger.success(`[${this.module_name}] UPDATE query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateUpdateQuery", error); }
@@ -298,7 +288,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `DELETE FROM ${sanitized_table_name} ${where_clause};`;
 
-            this.logger.success(`[${this.module_name}] DELETE query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateDeleteQuery", error); }
@@ -315,7 +304,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `CREATE TABLE ${sanitized_table_name} (${column_sql_clause});`;
 
-            this.logger.success(`[${this.module_name}] CREATE TABLE query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateDeleteQuery", error); }
@@ -330,7 +318,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `DROP TABLE IF EXISTS ${sanitized_table_name};`;
 
-            this.logger.success(`[${this.module_name}] DROP TABLE query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateDropTableQuery", error); }
@@ -364,7 +351,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `ALTER TABLE ${sanitized_table_name} ADD COLUMN ${column_sql_clause} ${pos_clause};`;
 
-            this.logger.success(`[${this.module_name}] ALTER TABLE query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateAddNewTablecolumnQuery", error); }
@@ -380,7 +366,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `ALTER TABLE ${sanitized_table_name} DROP COLUMN ${sanitized_column_name};`;
 
-            this.logger.success(`[${this.module_name}] DROP TABLE COLUMN  query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateDropTablecolumnQuery", error); }
@@ -411,7 +396,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `CREATE ${unique_clause} INDEX ${sanitized_index_name} ON ${sanitized_table_name} (${index_field_clause});`;
 
-            this.logger.success(`[${this.module_name}] CREATE COLUMN INDEX query generated`);
             return query.trim();
         }
         catch (error: unknown) { this.handleError("generateAddIndexQuery", error); }
@@ -439,7 +423,6 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const query = `DROP INDEX ${sanitized_index_name} ON ${sanitized_table_name};`;
 
-            this.logger.success(`[${this.module_name}] DROP INDEX query generated`);
             return query.trim();
         } catch (error: unknown) {
             this.handleError("generateRemoveIndexQuery", error);

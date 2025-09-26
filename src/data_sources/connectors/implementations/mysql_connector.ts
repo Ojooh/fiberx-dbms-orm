@@ -172,7 +172,7 @@ class MySQLConnector implements BaseSQLConnector {
 
             if (!conn) { throw new Error(`No pool/connection found for id "${transaction_id}"`); }
 
-            this.logger.info(`Executing Query [${connection_id}]:`, { query });
+            this.logger.info(`[${this.module_name}] [${connection_id}] Executing Query:`, { query });
 
             const [result]  = await conn.query(query);
 

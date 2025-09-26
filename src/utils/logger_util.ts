@@ -57,11 +57,10 @@ class LoggerUtil {
 
         if (this.create_log_file) { fs.appendFileSync(this.log_file_path, log_msg); }
 
-        console.log(`\n${timestamp} [${level}] ${message}\n`);
+        console.log(`\n${log_msg}\n`);
 
         if (data_error && Object.keys(data_error).length) {
             console.log({ ...data_error });
-            console.log("\n========================================\n");
         }
 
         return log_object;
