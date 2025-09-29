@@ -202,7 +202,15 @@ class QueryFormatterUtil {
 
     // Method to Escapes a literal value (string, number, array, date, null) 
     public static escapeValue(value: any): string {
-        if (typeof value === 'string') { return `'${value.replace(/'/g, "''")}'`; }
+        if (typeof value === 'string') { 
+            // ✅ Check if value is a RAW expression
+            const raw_match = value.match(/^RAW\((.*)\)$/);
+            if (raw_match) {
+                // return the inner content as-is
+                return raw_match[1];
+            }
+            return `'${value.replace(/'/g, "''")}'`;
+         }
 
         if (value === null || value === undefined) return "NULL";
 

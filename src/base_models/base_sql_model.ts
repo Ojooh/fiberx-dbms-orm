@@ -103,7 +103,7 @@ class BaseSQLModel {
         const connector             = this.getSchemaConnector(this.schema);
         const { quote_char }        = connector.query_builder;
         const resolved_field_name   = QueryFormatterUtil.escapeQualifiedField(`${this.schema.table_name}.${field}`, quote_char);
-        const raw_expression        = `(${resolved_field_name} ${op} ${amount})`;
+        const raw_expression        = `RAW(${resolved_field_name} ${op} ${amount})`;
 
         const record_data           = { [field]: raw_expression };
         const update_input_params   = { record_data, where, options };
