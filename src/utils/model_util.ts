@@ -45,7 +45,7 @@ class ModelUtil {
         if (!valid_columns.includes(column)) { return false; }
 
         // If value is object, validate operators
-        if (this.isObject(value)) { return Object.keys(value).every(op => this.valid_operators.includes(op)); }
+        if (this.isObject(value)) { return Object.keys(value).every(op => this.valid_operators.includes(op.toLowerCase())); }
 
         return true; // Direct equality check (e.g., { name: "John" })
     };

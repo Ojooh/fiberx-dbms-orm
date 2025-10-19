@@ -78,6 +78,8 @@ class QueryFormatterUtil {
         return Object.entries(where_obj)
         .map(
             ([key, value]) => {
+                key = key.toUpperCase();
+
                 if (key === 'OR' || key === 'AND') {
                     return this.handleNestedLogicalCondition(table_name, key, where_obj);
                 }
