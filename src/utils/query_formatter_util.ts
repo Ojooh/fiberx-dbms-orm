@@ -17,7 +17,7 @@ class QueryFormatterUtil {
     private static readonly permission_map  = { read: "SELECT", create: "INSERT", update: "UPDATE", delete: "DELETE" };
 
    // Private Method Handles nested OR / AND logic conditions
-    private static handleNestedLogicalCondition(table_name: string, key: "OR" | "AND", conditionGroup: Record<string, any>): string {
+    private static handleNestedLogicalCondition(table_name: string, key: string, conditionGroup: Record<string, any>): string {
         const conditions = conditionGroup[key];
 
         if (!Array.isArray(conditions)) {
@@ -78,9 +78,8 @@ class QueryFormatterUtil {
         return Object.entries(where_obj)
         .map(
             ([key, value]) => {
-                key = key.toUpperCase();
-
-                if (key === 'OR' || key === 'AND') {
+                if (key.toUpperCase() === 'OR' || key.toUpperCase() === 'AND') {
+                    key = key.toUpperCase() as ("OR" | "AND");
                     return this.handleNestedLogicalCondition(table_name, key, where_obj);
                 }
                 
