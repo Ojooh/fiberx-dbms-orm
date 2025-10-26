@@ -18,6 +18,7 @@ import BaseSQLConnector from "../data_sources/connectors/base_sql_connector";
 import DataSourceRegistry from "../data_sources/data_source_registry";
 import QueryFormatterUtil from "../utils/query_formatter_util";
 import EventSystemUtil from "../utils/event_system_util";
+import QueryCacheManagerUtil from "../utils/query_cache_manager_util";
 
 
 class BaseSQLModel {
@@ -162,14 +163,27 @@ class BaseSQLModel {
     // Method to find record based on primary key condition
     public static async findByPk (input_params: FindByPkInputParams): Promise<BaseSQLModel | null> {
         try {
-            const { v_state, v_msg, v_data } = ModelUtil.validateFindByPkRequest(input_params, this.schema, this.associations);
-
-            if(!v_state || !v_data) { this.handleError("findByPk", v_msg); }
-
-            v_data.limit            = 1;
-            const transaction_id    = v_data?.transaction_id || "";
+            const modal_name        = this.schema.model_name ?? "";
+            const cache_key         = QueryCacheManagerUtil.generateCacheKey(modal_name, "findByPk", input_params);
+            const cached_query      = QueryCacheManagerUtil.get<string>(cache_key);
             const connector         = this.getSchemaConnector(this.schema);
-            const sql_query         = connector.query_builder.generateSelectQuery(v_data, this.schema);
+            const transaction_id    = input_params?.options?.transaction_id;
+
+            let sql_query: string;
+
+            if (cached_query) { sql_query = cached_query; }
+            
+            else {
+                const { v_state, v_msg, v_data } = ModelUtil.validateFindByPkRequest(input_params, this.schema, this.associations);
+
+                if(!v_state || !v_data) { this.handleError("findByPk", v_msg); }
+
+                v_data.limit            = 1;
+                sql_query               = connector.query_builder.generateSelectQuery(v_data, this.schema);
+
+                QueryCacheManagerUtil.set(cache_key, sql_query);
+            }
+
             const { success, rows } = await connector.executeQuery(sql_query, { transaction_id });
 
             if(!success || !rows.length) { return null }
@@ -182,14 +196,26 @@ class BaseSQLModel {
     // Method to find a record based on condition(s)
     public static async findOne (input_params: FindInputParams): Promise<BaseSQLModel | null> {
         try {
-            const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
-
-            if(!v_state || !v_data) { this.handleError("findOne", v_msg); }
-
-            v_data.limit            = 1;
-            const transaction_id    = v_data?.transaction_id || "";
+            const modal_name        = this.schema.model_name ?? "";
+            const cache_key         = QueryCacheManagerUtil.generateCacheKey(modal_name, "findOne", input_params);
+            const cached_query      = QueryCacheManagerUtil.get<string>(cache_key);
             const connector         = this.getSchemaConnector(this.schema);
-            const sql_query         = connector.query_builder.generateSelectQuery(v_data, this.schema);
+            const transaction_id    = input_params?.options?.transaction_id;
+
+            let sql_query: string;
+
+            if (cached_query) { sql_query = cached_query; }
+
+            else {
+                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
+
+                if(!v_state || !v_data) { this.handleError("findOne", v_msg); }
+
+                v_data.limit    = 1;
+                sql_query       = connector.query_builder.generateSelectQuery(v_data, this.schema);
+                QueryCacheManagerUtil.set(cache_key, sql_query);
+            }
+
             const { success, rows } = await connector.executeQuery(sql_query, { transaction_id });
 
             if(!success || !rows.length) { return null }
@@ -202,13 +228,26 @@ class BaseSQLModel {
     // Method to all records based on a condition(s)
     public static async findAll (input_params: FindInputParams): Promise<BaseSQLModel[]> {
         try {
-            const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
-
-            if(!v_state || !v_data) { this.handleError("findAll", v_msg); }
-
-            const transaction_id    = v_data?.transaction_id || "";
+            const modal_name        = this.schema.model_name ?? "";
+            const cache_key         = QueryCacheManagerUtil.generateCacheKey(modal_name, "findAll", input_params);
+            const cached_query      = QueryCacheManagerUtil.get<string>(cache_key);
             const connector         = this.getSchemaConnector(this.schema);
-            const sql_query         = connector.query_builder.generateSelectQuery(v_data, this.schema);
+            const transaction_id    = input_params?.options?.transaction_id;
+
+            let sql_query: string;
+
+            if (cached_query) { sql_query = cached_query; }
+
+            else {
+                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
+
+                if(!v_state || !v_data) { this.handleError("findAll", v_msg); }
+
+                sql_query = connector.query_builder.generateSelectQuery(v_data, this.schema);
+
+                QueryCacheManagerUtil.set(cache_key, sql_query);
+            }
+
             const { success, rows } = await connector.executeQuery(sql_query, { transaction_id });
 
             if(!success || !rows.length) { return [] }
@@ -221,13 +260,26 @@ class BaseSQLModel {
     // Method to count records based on contion(s)
     public static async count (input_params: CountInputParams): Promise<number> {
         try {
-            const { v_state, v_msg, v_data } = ModelUtil.validateCountRequest(input_params, this.schema, this.associations);
-
-            if(!v_state || !v_data) { this.handleError("count", v_msg); }
-
-            const transaction_id    = v_data?.transaction_id || "";
+            const modal_name        = this.schema.model_name ?? "";
+            const cache_key         = QueryCacheManagerUtil.generateCacheKey(modal_name, "count", input_params);
+            const cached_query      = QueryCacheManagerUtil.get<string>(cache_key);
             const connector         = this.getSchemaConnector(this.schema);
-            const sql_query         = connector.query_builder.generateSelectCountQuery(v_data, this.schema);
+            const transaction_id    = input_params?.options?.transaction_id;
+
+            let sql_query: string;
+
+            if (cached_query) { sql_query = cached_query; }
+
+            else {
+                const { v_state, v_msg, v_data } = ModelUtil.validateCountRequest(input_params, this.schema, this.associations);
+
+                if(!v_state || !v_data) { this.handleError("count", v_msg); }
+
+                sql_query = connector.query_builder.generateSelectCountQuery(v_data, this.schema);
+
+                QueryCacheManagerUtil.set(cache_key, sql_query);
+            }
+
             const { success, rows } = await connector.executeQuery(sql_query, { transaction_id });
 
             if(!success || !rows.length) { return 0 }
@@ -240,21 +292,37 @@ class BaseSQLModel {
     // Method to handle find and count all based on condition(s)
     public static async findAndCountAll(input_params: FindInputParams): Promise<{ rows: BaseSQLModel[]; count: number }> {
         try {
-            const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
+            const modal_name        = this.schema.model_name ?? "";
+            const cache_key         = QueryCacheManagerUtil.generateCacheKey(modal_name, "findAndCountAll", input_params);
+            let cached_queries      = QueryCacheManagerUtil.get<{ data: string; count: string }>(cache_key);
+            const connector         = this.getSchemaConnector(this.schema);
+            const transaction_id    = input_params?.options?.transaction_id;
 
-            if (!v_state || !v_data) { this.handleError("findAndCountAll", v_msg); }
+            let sql_data_query: string;
+            let sql_count_query: string;
 
-            const transaction_id        = v_data.transaction_id || "";
-            const connector             = this.getSchemaConnector(this.schema);
-            const data_query_params     = { ...v_data };
-            const count_query_params    = { ...v_data };
+            // === Step 3: Use cache if available ===
+            if (cached_queries) {
+                sql_data_query = cached_queries?.data;
+                sql_count_query = cached_queries?.count;
+            } 
+            else {
+                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
 
-            // Ensure limit/offset only apply to data query
-            delete count_query_params.limit;
-            delete count_query_params.offset;
+                if (!v_state || !v_data) { this.handleError("findAndCountAll", v_msg); }
 
-            const sql_data_query = connector.query_builder.generateSelectQuery(data_query_params, this.schema);
-            const sql_count_query = connector.query_builder.generateSelectCountQuery(count_query_params, this.schema);
+                const data_query_params     = { ...v_data };
+                const count_query_params    = { ...v_data };
+
+                // Ensure limit/offset only apply to data query
+                delete count_query_params.limit;
+                delete count_query_params.offset;
+
+                sql_data_query  = connector.query_builder.generateSelectQuery(data_query_params, this.schema);
+                sql_count_query = connector.query_builder.generateSelectCountQuery(count_query_params, this.schema);
+
+                QueryCacheManagerUtil.set(cache_key, { data: sql_data_query, count: sql_count_query });
+            }
 
             // Run both queries in parallel
             const [data_result, count_result] = await Promise.all([
