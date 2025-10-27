@@ -70,7 +70,7 @@ class QueryCacheManagerUtil {
 
     // ✅ Generate a deterministic cache key
     public static generateCacheKey(model_name: string, method: string, input_params: Record<string, any>): string {
-        const sorted_str    = JSON.stringify(input_params, Object.keys(input_params).sort());
+        const sorted_str    = JSON.stringify(Object.keys(input_params).sort().map((k)=> { return input_params[k] }));
         const hash          = crypto.createHash("sha256").update(sorted_str).digest("hex");
 
         return `${model_name}:${method}:${hash}`;

@@ -212,3 +212,5 @@ export interface ChangeDataQueryBuilderObject {
 export interface ColumnInputParams { column_name: string; }
 
 export interface ColumnIndexInputParams { fields: string[]; unique: boolean }
+
+
