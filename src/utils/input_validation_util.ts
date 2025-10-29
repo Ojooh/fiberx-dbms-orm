@@ -6,7 +6,7 @@ class InputValidationUtil {
 		private static readonly namey_regex_reg_exp        = /^[A-Za-z0-9.'\s,/_\-()&]*$/;
 		private static readonly email_regex_reg_exp        = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
 		private static readonly tel_regex_reg_exp          = /^[\s()+-]*([0-9][\s()+-]*){6,20}$/;
-		private static readonly pass_regex_reg_exp         = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d){6,}.+$/;
+		private static readonly pass_regex_reg_exp         = /^(?=.*[a-z])(?=.*\d).{6,}$/;
 		private static readonly url_regex_reg_exp          = /^(https?:\/\/)?((localhost|[a-zA-Z0-9-_.]+)(:[0-9]{1,5})?)(\/[a-zA-Z0-9-._~:/?#@!$&'()*+,;=%]*)?$/;
 		private static readonly text_area_regex_reg_exp   = /^(?=.*[a-zA-Z])[\w\s.,!?'\-()&@$#%*+=:;"<>]*$/;
 		private static readonly uuid_regex_reg_exp         = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
