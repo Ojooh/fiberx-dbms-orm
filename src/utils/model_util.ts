@@ -160,7 +160,7 @@ class ModelUtil {
                 const [prefix, col] = key.split('.', 2);
 
                 // check base table
-                if (!base_valid_columns.includes(col)) {
+                if (!base_valid_columns.includes(key)) {
                     return false;
                 } 
 

@@ -190,7 +190,7 @@ class MySQLConnector implements BaseSQLConnector {
 
             return { success: true, rows: [], affected_rows, changed_rows, insert_id };
         } 
-        catch (error: unknown) { this.handleError("rollbackTransaction", error); }
+        catch (error: unknown) { this.handleError("executeQuery", error); }
     }
 
 }

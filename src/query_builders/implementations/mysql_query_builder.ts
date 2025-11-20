@@ -187,6 +187,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
             const distinct_list                     = distinct ? ["DISTINCT"] : [""];
+            console.log({ fields, })
             const select_fields_list                = QueryFormatterUtil.generateFieldsCluase(fields, table_name, this.quote_char);
             const where_condition_list              = where ? QueryFormatterUtil.generateWhereClause(where, table_name, this.quote_char, this.like_op) : [""];
             const extra_condition_list              = QueryFormatterUtil.generateOptionsClause({ order_by, order_direction, limit, offset, lock }, table_name, this.quote_char);
