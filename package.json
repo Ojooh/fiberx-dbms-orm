@@ -1,6 +1,6 @@
 {
 	"name": "fiberx-dbms-orm",
-	"version": "1.5.02",
+	"version": "1.5.03",
 	"description": "A TypeScript-based ORM powering the Fiberx Innovations suite of applications. Provides a flexible, modular abstraction layer for interacting with various relational databases, supporting models, associations, query builders, and dynamic schema handling.",
 	"keywords": [
 		"orm",

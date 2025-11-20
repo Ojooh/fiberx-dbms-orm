@@ -222,8 +222,7 @@ class ModelUtil {
 
                 if(!is_valid_fields?.v_state) { return { v_state: false, v_msg: is_valid_fields?.v_msg} }
 
-                // ensure returned fields are fully qualified for consistency
-                target_fields = is_valid_fields?.v_data!.map(f => typeof f === 'string' && /^RAW\(.+\)$/.test(f) ? f : `${target_table_name}.${f}`);
+                target_fields = is_valid_fields?.v_data || [];
             }
             else { target_fields = valid_fields.map(col => `${target_table_name}.${col}`); }
 
