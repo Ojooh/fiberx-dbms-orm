@@ -176,7 +176,7 @@ class BaseSQLModel {
 
         const source_table_name = source_model.schema.table_name;
         const target_table_name = def.as || target_model.schema.table_name;
-        const source_fields     = Object.keys(source_model.schema.columns || {}).map(field => `${target_table_name}.${field}`);
+        const source_fields     = Object.keys(source_model.schema.columns || {});
         const target_fields     = Object.keys(target_model.schema.columns || {}).map(field => `${target_table_name}.${field}`);
         const new_table_name    = [source_table_name, target_table_name];
         const new_valid_fields  = [...source_fields, ...target_fields];
