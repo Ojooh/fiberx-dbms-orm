@@ -15,11 +15,12 @@ import {
     DataQueryBuilderObject,
     UpdateDataInputParams,
     DestroyDataInputParams,
-    ChangeDataQueryBuilderObject
+    ChangeDataQueryBuilderObject,
+    ModelInfoInterface
 } from "../types/model_type";
 
+import SQLRaw from "./sql_raw_util";
 import GlobalVariableManagerUtil from "./global_variable_manager_util";
-
 
 class ModelUtil {
 
@@ -71,18 +72,34 @@ class ModelUtil {
     }
 
     // Method to validate column field input
-    private static validateFieldsInput(fields: string[], valid_columns: string[], table_name: string = ""): { v_state: boolean; v_msg: string; v_data?: string[] } {
+    private static validFieldsArrayInput(fields: Array<string | SQLRaw>, valid_columns: string[], table_name: string = ""): { v_state: boolean; v_msg: string; v_data?: string[] } {
         const resolved_fields = [];
 
-        if (!Array.isArray(fields) || fields.some(f => typeof f !== "string")) {
-            return { v_state: false, v_msg: `Invalid fields: must be an array of strings.` };
+        if (!Array.isArray(fields)) {
+            return { v_state: false, v_msg: `invalid_fields_input_must_be_an_array` };
         }
 
         for (const field of fields) {
-            const resolved = this.resolveColumnName(field, table_name!);
+            // ✔ CASE 1: RAW object
+            if (field instanceof SQLRaw) {
+                const { v_state, v_msg } = field.validateRawExpression();
+
+                if (!v_state) return { v_state, v_msg };
+
+                resolved_fields.push(field.getExpression());
+
+                continue;
+            }
+
+            // ✔ CASE 2: Standard field
+            if (typeof field !== "string") {
+                return { v_state: false, v_msg: `invalid_field_must_be_string_or_raw_expression` };
+            }
+
+            const resolved = this.resolveColumnName(field, table_name);
 
             if (!valid_columns.includes(resolved)) {
-                return { v_state: false, v_msg: `Invalid field: "${field}" does not exist on table "${table_name}".`};
+                return { v_state: false, v_msg: `invalid_field_"${field}"_does_not_exist_on_table_"${table_name}".`};
             }
 
             resolved_fields.push(`${resolved}`);
@@ -94,6 +111,7 @@ class ModelUtil {
 
     // Method to validate where object
     private static validateWhereObject(where: Record<string, any>,  valid_columns: string[],  table_name: string = "" ): { v_state: boolean; v_msg: string; v_data?: Record<string, any> } {
+        // legacy simple validator kept for backward compatibility
         if (!where || Object.keys(where).length === 0) {
             return { v_state: false, v_msg: `Unsafe update: WHERE clause is missing` };
         }
@@ -106,6 +124,62 @@ class ModelUtil {
             const is_valid = this.validateCondition(key, value, valid_columns, table_name);
 
             if (!is_valid) { return { v_state: false, v_msg: `Invalid where condition at "${key}".` }; }
+        }
+
+        return { v_state: true, v_msg: "valid_where", v_data: where };
+    }
+
+    // Advanced where validator that supports dotted keys referencing included (joined) tables
+    private static validateWhereWithIncludes(where: Record<string, any>, base_valid_columns: string[], base_table_name: string, includes: IncludeQuery[] = [] ): { v_state: boolean; v_msg: string; v_data?: Record<string, any> } {
+        if (!where || Object.keys(where).length === 0) {
+            return { v_state: false, v_msg: `Unsafe update: WHERE clause is missing` };
+        }
+
+        if (!this.isObject(where)) {
+            return { v_state: false, v_msg: `Invalid where clause: must be an object.` };
+        }
+
+        const validateEntry = (key: string, value: any): boolean => {
+            // Logical operators
+            if (this.logical_ops.includes(key.toLowerCase())) {
+                if (!Array.isArray(value)) return false;
+
+                return value.every(
+                    (cond: any) => {
+                        return (
+                            this.isObject(cond) && 
+                            Object.entries(cond).every(
+                                ([k, v]) => { return validateEntry(k, v) }
+                            )
+                        );
+                    });
+            }
+
+            // dotted key -> table.field
+            else {
+                const [prefix, col] = key.split('.', 2);
+
+                // check base table
+                if (!base_valid_columns.includes(col)) {
+                    return false;
+                } 
+
+                // validate operators if object
+                if (this.isObject(value)) { 
+                    return Object.keys(value).every(
+                        (op) => {
+                            return this.valid_operators.includes(op.toLowerCase())
+                        });
+                }
+            }
+
+            return true;
+        };
+
+        for (const [key, value] of Object.entries(where)) {
+            if (!validateEntry(key, value)) { 
+                return { v_state: false, v_msg: `Invalid where condition at "${key}".` }; 
+            }
         }
 
         return { v_state: true, v_msg: "valid_where", v_data: where };
@@ -144,13 +218,14 @@ class ModelUtil {
             let nested_query_obj;
 
             if(fields) {
-                const is_valid_fields = this.validateFieldsInput(fields, valid_fields, target_table_name);
+                const is_valid_fields = this.validFieldsArrayInput(fields, valid_fields, target_table_name);
 
                 if(!is_valid_fields?.v_state) { return { v_state: false, v_msg: is_valid_fields?.v_msg} }
 
-                target_fields = is_valid_fields?.v_data;
+                // ensure returned fields are fully qualified for consistency
+                target_fields = is_valid_fields?.v_data!.map(f => typeof f === 'string' && /^RAW\(.+\)$/.test(f) ? f : `${target_table_name}.${f}`);
             }
-            else { target_fields = valid_fields.map(col => `${table_name}.${col}`); }
+            else { target_fields = valid_fields.map(col => `${target_table_name}.${col}`); }
 
             const association  = this.resolveAssociation(table_name, include_obj, associations);
 
@@ -296,24 +371,22 @@ class ModelUtil {
     }
 
     // Method to validate find by pk request
-    public static validateFindByPkRequest(input_params: FindByPkInputParams, schema: SchemaDefinitionInterface = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
+    public static validateFindByPkRequest(
+        input_params: FindByPkInputParams, 
+        model_info: ModelInfoInterface
+    ): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
         try {
-            const app_id = this.global_vars.getVariable("APP_ID");
+            const app_id                                                = this.global_vars.getVariable("APP_ID");
+            const { schema, associations, association_metadata }        = model_info; 
+            const { valid_fields = [], valid_table_names = [] }         = association_metadata || {};
+            const { id, fields = ["*"], options = {} }                  = input_params;
+            const { includes = [], transaction_id = "" }                = options;
 
             const { table_name = "",  primary_key = "id", columns = {}, permissions, model_name = "" } = schema;
 
-            const valid_columns = Object.keys(columns);
-
-            const { id, fields, options = {} } = input_params;
-
-            const { includes = [], transaction_id = "" } = options;
-
-            let valid_fields;
-            let valid_includes;
-            let valid_options;
-
             // 1. Permission check
             const has_permission = this.isValidPermission(app_id, model_name, "read", permissions);
+
 
             if(!has_permission?.v_state) { return { v_state: false, v_msg: has_permission.v_msg} }
 
@@ -321,14 +394,9 @@ class ModelUtil {
             if(!id) { return { v_state: false, v_msg: `Invalid Primary Key Value: ${id}`} }
 
             // 3. validate fields
-            if(fields) {
-                const is_valid_fields = this.validateFieldsInput(fields, valid_columns, table_name);
+            const is_valid_fields = this.validFieldsArrayInput(fields, valid_fields, table_name);
 
-                if(!is_valid_fields?.v_state) { return { v_state: false, v_msg: is_valid_fields?.v_msg} }
-
-                valid_fields = is_valid_fields?.v_data;
-            }
-            else { valid_fields = valid_columns.map(col => `${table_name}.${col}`); }
+            if(!is_valid_fields?.v_state) { return { v_state: false, v_msg: is_valid_fields?.v_msg} }
 
             // 4. Validate includes if present
             let includes_result;
@@ -337,25 +405,25 @@ class ModelUtil {
                 includes_result = this.validateIncludes(associations || [], table_name, includes);
 
                 if (!includes_result?.v_state) { return { v_state: false, v_msg: includes_result?.v_msg}; }
-
-                valid_includes = includes_result?.v_data;
             }
 
             // 4. Validate options
             let options_result;
 
             if (options && Object.keys(options).length > 1) {
-                options_result = this.validateOptions(options, valid_columns, table_name);
+                options_result = this.validateOptions(options, valid_fields, table_name);
 
                 if (!options_result?.v_state) { return { v_state: false, v_msg: options_result?.v_msg}; }
-
-                valid_options = options_result?.v_data || {};
             }
-            else { valid_options = {}; }
 
 
             const where     = { [primary_key]: id };
-            const v_data    = { fields: valid_fields, where, includes: valid_includes, transaction_id };
+            const v_data    = { 
+                fields: is_valid_fields?.v_data || [], 
+                where, 
+                includes: includes_result?.v_data || [], 
+                transaction_id 
+            };
 
             return { v_state: true, v_msg: "valid_input", v_data: v_data as QueryBuilderObject }
         }
@@ -364,22 +432,17 @@ class ModelUtil {
     }
 
     // Method to validate find one request
-    public static validateFindRequest(input_params: FindInputParams, schema: SchemaDefinitionInterface = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
+    public static validateFindRequest(
+        input_params: FindInputParams, 
+        model_info: ModelInfoInterface,
+    ): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
         try {
-            const app_id = this.global_vars.getVariable("APP_ID");
-
-            const { table_name = "",  primary_key = "id", columns = {}, permissions, model_name = "" } = schema;
-
-            const valid_columns = Object.keys(columns);
-
-            const { fields, where, options = {} } = input_params;
-
-            const { includes = [], transaction_id = "" } = options;
-
-            let valid_fields;
-            let validated_where = null;
-            let valid_includes;
-            let valid_options;
+            const app_id                                                = this.global_vars.getVariable("APP_ID");
+            const { schema, associations, association_metadata }        = model_info; 
+            const { valid_fields = [], valid_table_names = [] }         = association_metadata || {};
+            const { where, fields = ["*"], options = {} }               = input_params;
+            const { includes = [], transaction_id = "" }                = options;
+            const { table_name = "", permissions, model_name = "" }     = schema;
 
             // 1. Permission check
             const has_permission = this.isValidPermission(app_id, model_name, "read", permissions);
@@ -387,49 +450,45 @@ class ModelUtil {
             if(!has_permission?.v_state) { return { v_state: false, v_msg: has_permission.v_msg} }
 
             // 2. validate fields
-            if(fields) {
-                const is_valid_fields = this.validateFieldsInput(fields, valid_columns, table_name);
+            const is_valid_fields = this.validFieldsArrayInput(fields, valid_fields, table_name);
 
-                if(!is_valid_fields?.v_state) { return { v_state: false, v_msg: is_valid_fields?.v_msg} }
+            if(!is_valid_fields?.v_state) { return { v_state: false, v_msg: is_valid_fields?.v_msg} }
 
-                valid_fields = is_valid_fields?.v_data;
-            }
-            else { valid_fields = valid_columns.map(col => `${table_name}.${col}`); }
-
-            // 3. validate where
-            if (where && Object.entries(where).length) {
-                const is_valid_where = this.validateWhereObject(where, valid_columns, table_name);
-
-                if (!is_valid_where.v_state) { return { v_state: false, v_msg: is_valid_where.v_msg }; }
-
-                validated_where = is_valid_where.v_data;
-            }
-
-            // 4. Validate includes if present
+            // 3. Validate includes if present (do this before where so where can reference includes)
             let includes_result;
 
             if (includes.length) {
                 includes_result = this.validateIncludes(associations || [], table_name, includes);
 
                 if (!includes_result?.v_state) { return { v_state: false, v_msg: includes_result?.v_msg}; }
+            }
 
-                valid_includes = includes_result?.v_data;
+            let is_valid_where;
+
+            // 4. validate where (now that includes are known)
+            if (where && Object.entries(where).length) {
+                is_valid_where = this.validateWhereWithIncludes(where, valid_fields, table_name, includes_result?.v_data || []);
+
+                if (!is_valid_where.v_state) { return { v_state: false, v_msg: is_valid_where.v_msg }; }
             }
 
             // 4. Validate options
             let options_result;
 
             if (options && Object.keys(options).length > 1) {
-                options_result = this.validateOptions(options, valid_columns, table_name);
+                options_result = this.validateOptions(options, valid_fields, table_name);
 
                 if (!options_result?.v_state) { return { v_state: false, v_msg: options_result?.v_msg}; }
-
-                valid_options = options_result?.v_data || {};
             }
-            else { valid_options = {}; }
 
 
-            const v_data    = { ...valid_options, fields: valid_fields, where: validated_where, includes: valid_includes, transaction_id,  };
+            const v_data    = { 
+                ...(options_result?.v_data || {}), 
+                fields: is_valid_fields?.v_data || [], 
+                where: is_valid_where?.v_data || {}, 
+                includes: includes_result?.v_data || [],
+                transaction_id,  
+            };
 
             return { v_state: true, v_msg: "valid_input", v_data: v_data as QueryBuilderObject }
         }
@@ -438,61 +497,56 @@ class ModelUtil {
     }
 
     // Method to validate count request
-    public static validateCountRequest(input_params: CountInputParams, schema: SchemaDefinitionInterface = {},  associations: AssociationDefinition[] = []): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
+    public static validateCountRequest(
+        input_params: CountInputParams, 
+        model_info: ModelInfoInterface
+    ): { v_state: boolean; v_msg: string, v_data?: QueryBuilderObject } {
         try {
-            const app_id = this.global_vars.getVariable("APP_ID");
-
-            const { table_name = "", columns = {}, permissions, model_name = "" } = schema;
-
-            const valid_columns = Object.keys(columns);
-
-            const { where, options = {} } = input_params;
-
-            const { includes = [], transaction_id = "" } = options;
-
-            let validated_where = null;
-            let valid_includes;
-            let valid_options;
+            const app_id                                                = this.global_vars.getVariable("APP_ID");
+            const { schema, associations, association_metadata }        = model_info; 
+            const { valid_fields = [], valid_table_names = [] }         = association_metadata || {};
+            const { where,  options = {} }                              = input_params;
+            const { includes = [], transaction_id = "" }                = options;
+            const { table_name = "", permissions, model_name = "" }     = schema;
 
             // 1. Permission check
             const has_permission = this.isValidPermission(app_id, model_name, "read", permissions);
 
             if(!has_permission?.v_state) { return { v_state: false, v_msg: has_permission.v_msg} }
 
-            // 3. validate where
-            if (where && Object.entries(where).length) {
-                const is_valid_where = this.validateWhereObject(where, valid_columns, table_name);
-
-                if (!is_valid_where.v_state) { return { v_state: false, v_msg: is_valid_where.v_msg }; }
-
-                validated_where = is_valid_where.v_data;
-            }
-
-            // 4. Validate includes if present
+            // 3. Validate includes if present (do this before where so where can reference includes)
             let includes_result;
 
             if (includes.length) {
                 includes_result = this.validateIncludes(associations || [], table_name, includes);
 
                 if (!includes_result?.v_state) { return { v_state: false, v_msg: includes_result?.v_msg}; }
+            }
 
-                valid_includes = includes_result?.v_data;
+            let is_valid_where;
+
+            // 4. validate where (now that includes are known)
+            if (where && Object.entries(where).length) {
+                is_valid_where = this.validateWhereWithIncludes(where, valid_fields, table_name, includes_result?.v_data || []);
+
+                if (!is_valid_where.v_state) { return { v_state: false, v_msg: is_valid_where.v_msg }; }
             }
 
             // 4. Validate options
             let options_result;
 
             if (options && Object.keys(options).length > 1) {
-                options_result = this.validateOptions(options, valid_columns, table_name);
+                options_result = this.validateOptions(options, valid_fields, table_name);
 
                 if (!options_result?.v_state) { return { v_state: false, v_msg: options_result?.v_msg}; }
-
-                valid_options = options_result?.v_data || {};
             }
-            else { valid_options = {}; }
 
-
-            const v_data    = { ...valid_options, where: validated_where, includes: valid_includes, transaction_id,  };
+            const v_data    = { 
+                ...(options_result?.v_data || {}), 
+                where: is_valid_where?.v_data || {}, 
+                includes: includes_result?.v_data || [],
+                transaction_id,  
+            };
 
             return { v_state: true, v_msg: "valid_input", v_data: v_data as QueryBuilderObject }
         }
@@ -501,17 +555,18 @@ class ModelUtil {
     }
 
     // Method to validate create request
-    public static validateCreateRequest(input_params: DataInputParams, schema: SchemaDefinitionInterface = {}): { v_state: boolean; v_msg: string, v_data?: DataQueryBuilderObject } {
+    public static validateCreateRequest(
+        input_params: DataInputParams, 
+        model_info: ModelInfoInterface,
+    ): { v_state: boolean; v_msg: string, v_data?: DataQueryBuilderObject } {
         try {
-            const app_id = this.global_vars.getVariable("APP_ID");
-
-            const { table_name = "", columns = {}, permissions, model_name = "" } = schema;
-
-            const valid_columns = Object.keys(columns);
-
-            const { record_data = [], options = {} } = input_params;
-
-            const { transaction_id = "", ignore_duplicates = false } = options;
+            const app_id                                                = this.global_vars.getVariable("APP_ID");
+            const { schema, associations, association_metadata }        = model_info; 
+            // const { valid_fields = [], valid_table_names = [] }         = association_metadata || {};
+            const { record_data = [], options = {} }                    = input_params;
+            const { transaction_id = "", ignore_duplicates = false }    = options;
+            const { columns = {}, permissions, model_name = "" }        = schema;
+            const valid_fields                                          = Object.keys(columns);
 
             // 1. Permission check
             const has_permission = this.isValidPermission(app_id, model_name, "create", permissions);
@@ -519,7 +574,7 @@ class ModelUtil {
             if(!has_permission?.v_state) { return { v_state: false, v_msg: has_permission.v_msg} }
 
             // 2. Validate record_data
-            const records_result = this.validateRecordDataArray(record_data, valid_columns, ignore_duplicates);
+            const records_result = this.validateRecordDataArray(record_data, valid_fields, ignore_duplicates);
 
             if (!records_result.v_state) {
                 return { v_state: false, v_msg: records_result.v_msg };
@@ -535,17 +590,18 @@ class ModelUtil {
     }
 
     // Method to validate create request
-    public static validateUpdateRequest(input_params: UpdateDataInputParams, schema: SchemaDefinitionInterface = {}): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
+    public static validateUpdateRequest(
+        input_params: UpdateDataInputParams, 
+        model_info: ModelInfoInterface,
+    ): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
         try {
-            const app_id = this.global_vars.getVariable("APP_ID");
+            const app_id                                                = this.global_vars.getVariable("APP_ID");
+            const { schema, associations, association_metadata }        = model_info; 
+            const { record_data = {}, where = {}, options = {} }        = input_params;
+            const { transaction_id = "" }                               = options;
 
-            const { table_name = "", columns = {}, permissions, model_name = "" } = schema;
-
-            const valid_columns = Object.keys(columns);
-
-            const { record_data = {}, where = {}, options = {} } = input_params;
-
-            const { transaction_id = ""} = options;
+            const { table_name = "", columns = {}, permissions, model_name = "" }        = schema;
+            const valid_fields  = Object.keys(columns);
 
             let validated_where = null;
 
@@ -555,14 +611,14 @@ class ModelUtil {
             if(!has_permission?.v_state) { return { v_state: false, v_msg: has_permission.v_msg} }
 
             // 2. Validate record_data
-            const records_result = this.validateRecordDataArray([record_data], valid_columns, false);
+            const records_result = this.validateRecordDataArray([record_data], valid_fields, false);
 
             if (!records_result.v_state) {
                 return { v_state: false, v_msg: records_result.v_msg };
             }
 
             // 3. validate where
-            const is_valid_where = this.validateWhereObject(where, valid_columns, table_name);
+            const is_valid_where = this.validateWhereObject(where, valid_fields, table_name);
 
             if (!is_valid_where.v_state) { return { v_state: false, v_msg: is_valid_where.v_msg }; }
 
@@ -578,17 +634,19 @@ class ModelUtil {
     }
 
     // Method to validate destroy request
-    public static validateDestroyRequest(input_params: DestroyDataInputParams, schema: SchemaDefinitionInterface = {}): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
+    public static validateDestroyRequest(
+        input_params: DestroyDataInputParams, 
+        model_info: ModelInfoInterface,
+    ): { v_state: boolean; v_msg: string, v_data?: ChangeDataQueryBuilderObject } {
         try {
-            const app_id = this.global_vars.getVariable("APP_ID");
+            const app_id                                                = this.global_vars.getVariable("APP_ID");
+            const { schema, associations, association_metadata }        = model_info; 
+            const { where = {}, options = {} }                         = input_params;
+            const { transaction_id = "" }                               = options;
 
             const { table_name = "", columns = {}, permissions, model_name = "" } = schema;
 
-            const valid_columns = Object.keys(columns);
-
-            const { where = {}, options = {} } = input_params;
-
-            const { transaction_id = ""} = options;
+            const valid_fields = Object.keys(columns);
 
             let validated_where = null;
 
@@ -598,7 +656,7 @@ class ModelUtil {
             if(!has_permission?.v_state) { return { v_state: false, v_msg: has_permission.v_msg} }
 
             // 2. validate where
-            const is_valid_where = this.validateWhereObject(where, valid_columns, table_name);
+            const is_valid_where = this.validateWhereObject(where, valid_fields, table_name);
 
             if (!is_valid_where.v_state) { return { v_state: false, v_msg: is_valid_where.v_msg }; }
 

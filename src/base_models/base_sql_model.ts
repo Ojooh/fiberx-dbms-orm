@@ -19,12 +19,14 @@ import DataSourceRegistry from "../data_sources/data_source_registry";
 import QueryFormatterUtil from "../utils/query_formatter_util";
 import EventSystemUtil from "../utils/event_system_util";
 import QueryCacheManagerUtil from "../utils/query_cache_manager_util";
+import SQLRawUtil from "../utils/sql_raw_util";
 
 
 class BaseSQLModel {
     [key: string]: any;
     static schema: SchemaDefinitionInterface = {};
     static associations: AssociationDefinition[] = [];
+    static association_metadata: Record<string, any> = {};
 
     constructor(data: Record<string, any> = {}) {
         this.initAttributesFromData(data);
@@ -99,17 +101,17 @@ class BaseSQLModel {
     private static async adjustNumericField(op: "+" | "-", input: AdjustNumericColumnParams): Promise<number> {
         const { field, amount = 1, where, options } = input;
 
-        const trigger_hook          = input?.trigger_hook ?? true;
-        const action                = op === "+" ? "increment" : "decrement";
-        const connector             = this.getSchemaConnector(this.schema);
-        const { quote_char }        = connector.query_builder;
-        const resolved_field_name   = QueryFormatterUtil.escapeQualifiedField(`${this.schema.table_name}.${field}`, quote_char);
-        const raw_expression        = `RAW(${resolved_field_name} ${op} ${amount})`;
+        const trigger_hook                  = input?.trigger_hook ?? true;
+        const action                        = op === "+" ? "increment" : "decrement";
+        const connector                     = this.getSchemaConnector(this.schema);
+        const { quote_char }                = connector.query_builder;
+        const resolved_field_name           = QueryFormatterUtil.escapeQualifiedField(`${this.schema.table_name}.${field}`, quote_char);
+        const raw_expression                = SQLRawUtil.RAW(`${resolved_field_name} ${op} ${amount})`);
 
-        const record_data           = { [field]: raw_expression };
-        const update_input_params   = { record_data, where, options };
-
-        const { v_state, v_msg, v_data } = ModelUtil.validateUpdateRequest(update_input_params, this.schema);
+        const record_data                   = { [field]: raw_expression };
+        const update_input_params           = { record_data, where, options };
+        const model_info                    = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+        const { v_state, v_msg, v_data }    = ModelUtil.validateUpdateRequest(update_input_params, model_info);
 
         if (!v_state || !v_data) this.handleError(`adjustNumericField(${op})`, v_msg);
 
@@ -137,7 +139,10 @@ class BaseSQLModel {
     public static registerAssociation(definition: AssociationDefinition): void {
         if (!this.associations) { this.associations = []; }
 
-        if (!this.hasDuplicateAssociation(definition)) { this.associations.push(definition); }
+        if (!this.hasDuplicateAssociation(definition)) { 
+            this.associations.push(definition); 
+            this.storeAssociationMetadata(definition);
+        }
     }
 
     // Method to set has many relationship
@@ -160,6 +165,31 @@ class BaseSQLModel {
         this.registerAssociation({ type: "belongsToMany", source: this, model: target, ...options });
     }
 
+    // METHOD TO STORE ASSOCIATION METADATA
+    private static storeAssociationMetadata(def: AssociationDefinition): void {
+        const source_model = def.source;
+        const target_model = def.model;
+
+        if (!source_model?.schema || !target_model?.schema) { return; }
+
+        const { valid_fields = [], valid_table_names = [] } = this.association_metadata || {};
+
+        const source_table_name = source_model.schema.table_name;
+        const target_table_name = def.as || target_model.schema.table_name;
+        const source_fields     = Object.keys(source_model.schema.columns || {}).map(field => `${target_table_name}.${field}`);
+        const target_fields     = Object.keys(target_model.schema.columns || {}).map(field => `${target_table_name}.${field}`);
+        const new_table_name    = [source_table_name, target_table_name];
+        const new_valid_fields  = [...source_fields, ...target_fields];
+
+        if (!this.association_metadata) { this.association_metadata = {}; }
+
+        this.association_metadata = {
+            valid_table_names: [...valid_table_names, ...new_table_name],
+            valid_fields: [...valid_fields, ...new_valid_fields ],
+        };
+    }
+
+
     // Method to find record based on primary key condition
     public static async findByPk (input_params: FindByPkInputParams): Promise<BaseSQLModel | null> {
         try {
@@ -174,7 +204,8 @@ class BaseSQLModel {
             if (cached_query) { sql_query = cached_query; }
             
             else {
-                const { v_state, v_msg, v_data } = ModelUtil.validateFindByPkRequest(input_params, this.schema, this.associations);
+                const model_info                    = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+                const { v_state, v_msg, v_data }    = ModelUtil.validateFindByPkRequest(input_params, model_info);
 
                 if(!v_state || !v_data) { this.handleError("findByPk", v_msg); }
 
@@ -207,7 +238,8 @@ class BaseSQLModel {
             if (cached_query) { sql_query = cached_query; }
 
             else {
-                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
+                const model_info                    = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+                const { v_state, v_msg, v_data }    = ModelUtil.validateFindRequest(input_params, model_info);
 
                 if(!v_state || !v_data) { this.handleError("findOne", v_msg); }
 
@@ -239,7 +271,8 @@ class BaseSQLModel {
             if (cached_query) { sql_query = cached_query; }
 
             else {
-                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
+                const model_info                 = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, model_info);
 
                 if(!v_state || !v_data) { this.handleError("findAll", v_msg); }
 
@@ -271,7 +304,8 @@ class BaseSQLModel {
             if (cached_query) { sql_query = cached_query; }
 
             else {
-                const { v_state, v_msg, v_data } = ModelUtil.validateCountRequest(input_params, this.schema, this.associations);
+                const model_info                 = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+                const { v_state, v_msg, v_data } = ModelUtil.validateCountRequest(input_params, model_info);
 
                 if(!v_state || !v_data) { this.handleError("count", v_msg); }
 
@@ -307,7 +341,8 @@ class BaseSQLModel {
                 sql_count_query = cached_queries?.count;
             } 
             else {
-                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, this.schema, this.associations);
+                const model_info                 = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+                const { v_state, v_msg, v_data } = ModelUtil.validateFindRequest(input_params, model_info);
 
                 if (!v_state || !v_data) { this.handleError("findAndCountAll", v_msg); }
 
@@ -351,11 +386,12 @@ class BaseSQLModel {
     // Method to handle create a new record
     public static async create(input_params: SingleDataInputParams): Promise<BaseSQLModel | null>  {
         try {
-            const record_data           = input_params?.record_data ?? {};
-            const options               = input_params?.options ?? {};
-            const trigger_hook          = input_params?.trigger_hook ?? true
-            const create_data_params    = { record_data: [record_data], options };
-            const { v_state, v_msg, v_data } = ModelUtil.validateCreateRequest(create_data_params, this.schema);
+            const record_data                   = input_params?.record_data ?? {};
+            const options                       = input_params?.options ?? {};
+            const trigger_hook                  = input_params?.trigger_hook ?? true
+            const create_data_params            = { record_data: [record_data], options };
+            const model_info                    = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+            const { v_state, v_msg, v_data }    = ModelUtil.validateCreateRequest(create_data_params, model_info);
 
             if (!v_state || !v_data) { this.handleError("create", v_msg); }
 
@@ -389,14 +425,18 @@ class BaseSQLModel {
     // Method to handle create a new record
     public static async bulkCreate(input_params: DataInputParams): Promise<number | null>  {
         try {
-            const { v_state, v_msg, v_data } = ModelUtil.validateCreateRequest(input_params, this.schema);
+            const model_info                    = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+            const { v_state, v_msg, v_data }    = ModelUtil.validateCreateRequest(input_params, model_info);
 
             if (!v_state || !v_data) { this.handleError("bulkCreate", v_msg); }
 
-            const transaction_id        = v_data.transaction_id || "";
-            const connector             = this.getSchemaConnector(this.schema);
-            const insert_sql_query      = connector.query_builder.generateInsertQuery(v_data, this.schema);
-            const { success, affected_rows }= await connector.executeQuery(insert_sql_query, { transaction_id });
+            const transaction_id                = v_data.transaction_id || "";
+            const connector                     = this.getSchemaConnector(this.schema);
+            const insert_sql_query              = connector.query_builder.generateInsertQuery(v_data, this.schema);
+
+            const { success, affected_rows, insert_id }    = await connector.executeQuery(insert_sql_query, { transaction_id });
+            
+            console.log(`Bulk Create INSERT Response: { affected_rows: ${affected_rows}, insertID: ${insert_id}}`)
 
             if(!success || !affected_rows) { return null }
 
@@ -408,8 +448,9 @@ class BaseSQLModel {
     // Method to handle create a new record
     public static async update(input_params: UpdateDataInputParams): Promise<number>  {
         try {
-            const trigger_hook          = input_params?.trigger_hook ?? true
-            const { v_state, v_msg, v_data } = ModelUtil.validateUpdateRequest(input_params, this.schema);
+            const trigger_hook                  = input_params?.trigger_hook ?? true;
+            const model_info                    = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+            const { v_state, v_msg, v_data }    =  ModelUtil.validateUpdateRequest(input_params, model_info);
 
             if (!v_state || !v_data) { this.handleError("update", v_msg); }
 
@@ -443,7 +484,8 @@ class BaseSQLModel {
     public static async destroy(input_params: DestroyDataInputParams): Promise<number>  {
         try {
             const trigger_hook                  = input_params?.trigger_hook ?? true;
-            const { v_state, v_msg, v_data }    = ModelUtil.validateDestroyRequest(input_params, this.schema);
+            const model_info                    = { schema: this.schema, associations: this.associations, association_metadata: this.association_metadata };
+            const { v_state, v_msg, v_data }    = ModelUtil.validateDestroyRequest(input_params, model_info);
 
             if (!v_state || !v_data) { this.handleError("destroy", v_msg); }
 

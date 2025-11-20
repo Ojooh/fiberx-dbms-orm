@@ -11,6 +11,7 @@ import {
     DialectOptions
 } from "../types/query_builder_type";
 
+import SQLRaw from "./sql_raw_util";
 import InputValidationUtil from "../utils/input_validation_util";
 
 class QueryFormatterUtil {
@@ -83,7 +84,13 @@ class QueryFormatterUtil {
                     return this.handleNestedLogicalCondition(table_name, key, where_obj);
                 }
                 
-                const qualified_field = `${this.escapeField(table_name, quote_char)}.${this.escapeField(key, quote_char)}`;
+                let qualified_field: string;
+                if (key.includes('.')) {
+                    qualified_field = this.escapeQualifiedField(key, quote_char);
+                } 
+                else {
+                    qualified_field = `${this.escapeField(table_name, quote_char)}.${this.escapeField(key, quote_char)}`;
+                }
 
                 if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                     const [operator, operand] = Object.entries(value)[0];
@@ -232,17 +239,20 @@ class QueryFormatterUtil {
 
         if (!Array.isArray(fields) || fields.length <= 0) { return [`${sanitized_table_name}.*`]; }
 
-        return fields.map(field => {
-            const sanitized_field   = this.escapeField(field, quote_char);
-            const base              = `${sanitized_table_name}.${sanitized_field}`;
+        return fields.map(
+            (field: string | SQLRaw) => {
+                if (field instanceof SQLRaw) { return field.getExpression(); }
+                
+                const sanitized_field   = this.escapeField(field, quote_char);
+                const base              = `${sanitized_table_name}.${sanitized_field}`;
 
-            if (use_alias) {
-                // Alias as table.field → makes it easier to parse into nested objects
-                const alias     = `${table_name}.${field}`;
-                return `${base} AS ${quote_char}${alias}${quote_char}`;
-            }
+                if (use_alias) {
+                    // Alias as table.field → makes it easier to parse into nested objects
+                    const alias     = `${table_name}.${field}`;
+                    return `${base} AS ${quote_char}${alias}${quote_char}`;
+                }
 
-            return base;
+                return base;
         });
     }
 

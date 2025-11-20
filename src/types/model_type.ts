@@ -213,4 +213,10 @@ export interface ColumnInputParams { column_name: string; }
 
 export interface ColumnIndexInputParams { fields: string[]; unique: boolean }
 
+export interface ModelInfoInterface {
+    schema: SchemaDefinitionInterface;
+    associations: AssociationDefinition[];
+    association_metadata: Record<string, any>;
+}
+
 
