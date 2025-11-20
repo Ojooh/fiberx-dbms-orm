@@ -27,8 +27,8 @@ class BaseSQLModel {
     static schema: SchemaDefinitionInterface = {};
     static associations: AssociationDefinition[] = [];
     static association_metadata: Record<string, any> = {
-        valid_table_names: [this.schema.table_name || ""],
-        valid_fields: Object.keys(this.schema.columns || {}),
+        valid_table_names: [],
+        valid_fields: [],
     };
 
     constructor(data: Record<string, any> = {}) {
@@ -94,10 +94,18 @@ class BaseSQLModel {
     private static getSchemaConnector(schema: SchemaDefinitionInterface): BaseSQLConnector {
         const registry         = DataSourceRegistry.getInstance();
         const connector        = registry.getConnector(this.schema?.datasource_name || "");
+        
 
         if (!connector) { this.handleError("getSchemaConnector", `No connector found for schema data source: ${this.schema?.datasource_name}`) }
 
-        connector.model_name    = schema?.model_name ? `${schema.model_name}Model`: ""
+        connector.model_name    = schema?.model_name ? `${schema.model_name}Model`: "";
+
+        const { valid_fields = [], valid_table_names = [] } = this.association_metadata || {};
+
+        this.association_metadata = {
+            valid_table_names: [...valid_table_names, this.schema.table_name],
+            valid_fields: [...valid_fields, ...Object.keys(this.schema.columns || {}) ],
+        };
         return connector
     }
 
