@@ -94,11 +94,14 @@ class BaseSQLModel {
     private static getSchemaConnector(schema: SchemaDefinitionInterface): BaseSQLConnector {
         const registry         = DataSourceRegistry.getInstance();
         const connector        = registry.getConnector(this.schema?.datasource_name || "");
+        const env_mode         = process.env.NODE_ENV || "development";
+        const database_name    = `${this.schema?.app_id ?? ""}_${env_mode}`;
         
-
         if (!connector) { this.handleError("getSchemaConnector", `No connector found for schema data source: ${this.schema?.datasource_name}`) }
 
         connector.model_name    = schema?.model_name ? `${schema.model_name}Model`: "";
+        console.log(`Using database: ${database_name} for model: ${connector.model_name}`);
+        connector.query_builder.setDatabase(database_name);
 
         const { valid_fields = [], valid_table_names = [] } = this.association_metadata || {};
 
