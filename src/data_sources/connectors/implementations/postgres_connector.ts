@@ -79,6 +79,7 @@ class PostgresConnector implements BaseSQLConnector {
                     throw new Error(`Failed to create Database ${database_params}`)
                 }
 
+                this.query_builder.setDatabase(database);
                 this.logger.success(`Database ${database} created sucessfully`)
             }
 
@@ -101,6 +102,7 @@ class PostgresConnector implements BaseSQLConnector {
             if("release" in connection_to_terminate) { connection_to_terminate.release() } else { await connection_to_terminate.end(); }
 
             this.pools.delete(connection_id);
+            this.query_builder.setDatabase(null);
             this.logger.success(`[${this.module_name}] Disconnected "${connection_id}" successfully.`);
 
             return true;
@@ -194,7 +196,7 @@ class PostgresConnector implements BaseSQLConnector {
 
             return { success: true, rows, affected_rows, insert_id, changed_rows };
         } 
-        catch (error: unknown) { this.handleError("rollbackTransaction", error); }
+        catch (error: unknown) { this.handleError("executeQuery", error); }
     }
 
 }

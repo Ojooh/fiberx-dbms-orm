@@ -56,7 +56,7 @@ export interface ColumnDefinition {
 
 export interface IndexDefinition { fields: string[]; unique: boolean; }
 
-export type Permission = "read" | "create" | "update" | "delete";
+export type Permission = "read" | "create" | "update" | "delete" | "create_table" | "drop_table" | "alter_table" | string;
 
 export interface SchemaDefinitionInterface {
     id?: number;

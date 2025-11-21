@@ -15,7 +15,15 @@ import SQLRaw from "./sql_raw_util";
 import InputValidationUtil from "../utils/input_validation_util";
 
 class QueryFormatterUtil {
-    private static readonly permission_map  = { read: "SELECT", create: "INSERT", update: "UPDATE", delete: "DELETE" };
+    private static readonly permission_map  = { 
+        read: "SELECT", 
+        create: "INSERT", 
+        update: "UPDATE", 
+        delete: "DELETE",
+        create_table: "CREATE",
+        drop_table: "DROP",
+        alter_table: "ALTER"
+    };
 
    // Private Method Handles nested OR / AND logic conditions
     private static handleNestedLogicalCondition(table_name: string, key: string, conditionGroup: Record<string, any>): string {

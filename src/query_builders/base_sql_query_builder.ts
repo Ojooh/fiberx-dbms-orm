@@ -19,6 +19,10 @@ import {
 
 interface BaseSQLQueryBuilder {
     quote_char: string;
+    database_name: string | null;
+
+    // Method to set the current database context
+    setDatabase(name: string | null): void;
 
     // Generate CREATE DATABASE query
     generateCreateDatabaseQuery(input_params: CreateDatabaseParams): string;
@@ -70,5 +74,8 @@ interface BaseSQLQueryBuilder {
 
     // Generate DROP INDEX query
     generateRemoveIndexQuery(input_params: ColumnIndexInputParams, schema: SchemaDefinitionInterface): string;
+
+    // Generate USE DATABASE query
+    generateUseDatabaseQuery(database_name: string): string;
 }
 export default BaseSQLQueryBuilder;

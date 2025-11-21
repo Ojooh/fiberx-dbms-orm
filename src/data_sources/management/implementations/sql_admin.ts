@@ -80,9 +80,13 @@ class SQLAdmin implements BaseSQLAdmin {
     }
 
     // Method to create a new table under a databse
-    public createTableInDatabase = async (schema: SchemaDefinitionInterface): Promise<boolean> => {
+    public createTableInDatabase = async (database_name: string, schema: SchemaDefinitionInterface): Promise<boolean> => {
+        const existing_database_name = this.query_builder.database_name;
+
         try {
             const { table_name, app_id, indexes } = schema;
+        
+            this.query_builder.setDatabase(database_name);  
 
             const table_sql_query = this.query_builder.generateCreateTableQuery(schema);
 
@@ -118,6 +122,7 @@ class SQLAdmin implements BaseSQLAdmin {
             return true
         }
         catch (error: unknown) { return this.handleError( "createTableInDatabase", error); }
+        finally { this.query_builder.setDatabase(existing_database_name); }
     }
 
     // Method to grant user priviledges

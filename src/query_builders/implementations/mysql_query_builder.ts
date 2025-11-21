@@ -34,6 +34,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
     public readonly json_agg_fn: string;
     public readonly dialect_options: DialectOptions;
     public data_type_mapper: BaseDataTypeMapper;
+    public database_name: string | null = null;
 
     constructor(logger?: LoggerUtil) {
         this.module_name            = "mysql_query_builder";
@@ -56,6 +57,25 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
         const error_obj = error instanceof Error ? error : new Error("Unknown error");
         this.logger.error(`[${this.module_name}] Error in ${method}: ${error_obj.message}`, { error: error_obj });
         throw error_obj;
+    }
+
+    // ⭐ Added: Helper to attach database.table_name
+    private applyDatabaseScope(table_name: string): string {
+        const t = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+
+        if (!this.database_name) return t;
+
+        const db = QueryFormatterUtil.escapeField(this.database_name, this.quote_char);
+
+        return `${db}.${t}`;
+    }
+
+    // ⭐ Added: Set database name for scoping all queries
+    public setDatabase(name: string | null): void {
+        if (name && typeof name === "string")
+            this.database_name = QueryFormatterUtil.sanitizeInput(name, "database_name");
+        else
+            this.database_name = null;
     }
 
     // Method to generate create database query
@@ -185,7 +205,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
                 limit, offset, distinct, lock,
             } = input_params;
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const distinct_list                     = distinct ? ["DISTINCT"] : [""];
             const select_fields_list                = QueryFormatterUtil.generateFieldsCluase(fields, table_name, this.quote_char);
             const where_condition_list              = where ? QueryFormatterUtil.generateWhereClause(where, table_name, this.quote_char, this.like_op) : [""];
@@ -197,7 +217,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             const where_clause                      = where_condition_list.filter(Boolean).join(" ");
             const options_clause                    = extra_condition_list.filter(Boolean).join(" ");
 
-            const query = `SELECT ${all_fields_clause} FROM ${sanitized_table_name} ${joins_clause} ${where_clause} ${options_clause};`;
+            const query = `SELECT ${all_fields_clause} FROM ${full_table_name} ${joins_clause} ${where_clause} ${options_clause};`;
 
             return query.trim();
         }
@@ -213,7 +233,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
                 limit, offset, distinct, lock,
             } = input_params;
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const distinct_list                     = distinct ? ["DISTINCT"] : [""];
             const where_condition_list              = where ? QueryFormatterUtil.generateWhereClause(where, table_name, this.quote_char, this.like_op) : [""];
             const extra_condition_list              = QueryFormatterUtil.generateOptionsClause({ order_by, order_direction, limit, offset, lock }, table_name, this.quote_char);
@@ -224,7 +244,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             const where_clause                      = where_condition_list.filter(Boolean).join(" ");
             const options_clause                    = extra_condition_list.filter(Boolean).join(" ");
 
-            const query = `SELECT ${all_fields_clause} FROM ${sanitized_table_name} ${joins_clause} ${where_clause} ${options_clause};`;
+            const query = `SELECT ${all_fields_clause} FROM ${full_table_name} ${joins_clause} ${where_clause} ${options_clause};`;
 
             return query.trim();
         }
@@ -239,14 +259,14 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             if (!record_data.length) { this.handleError("generateInsertQuery", "record_data must contain at least one record"); }
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const { fields_clause, values_clause }  = QueryFormatterUtil.generateInsertFieldsAndValues(record_data, this.dialect_options);
 
             const ignore_clause                     = ignore_duplicates ? "IGNORE" : "";
             const column_names_clause               = `(${fields_clause.join(", ")})`;
             const column_values_clause              = values_clause.join(", ");
 
-            const query = `INSERT ${ignore_clause} INTO ${sanitized_table_name} ${column_names_clause} VALUES ${column_values_clause};`;
+            const query = `INSERT ${ignore_clause} INTO ${full_table_name} ${column_names_clause} VALUES ${column_values_clause};`;
 
             return query.trim();
         }
@@ -261,14 +281,14 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             if (!record_data.length) { this.handleError("generateUpdateQuery", "record_data must contain at least one record"); }
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const where_condition_list              = QueryFormatterUtil.generateWhereClause(where, table_name, this.quote_char, this.like_op);
             const set_condition_list                = QueryFormatterUtil.generateUpdateFieldsWithValues(record_data[0], table_name, this.dialect_options);
 
             const where_clause                      = where_condition_list.filter(Boolean).join(" ");
             const set_clause                        = set_condition_list.filter(Boolean).join(', ');
 
-            const query = `UPDATE ${sanitized_table_name} SET ${set_clause} ${where_clause};`;
+            const query = `UPDATE ${full_table_name} SET ${set_clause} ${where_clause};`;
 
             return query.trim();
         }
@@ -281,12 +301,12 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             const { table_name = "" } = schema;
             const { where } = input_params;
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const where_condition_list              = QueryFormatterUtil.generateWhereClause(where, table_name, this.quote_char, this.like_op);
 
             const where_clause                      = where_condition_list.filter(Boolean).join(" ");
 
-            const query = `DELETE FROM ${sanitized_table_name} ${where_clause};`;
+            const query = `DELETE FROM ${full_table_name} ${where_clause};`;
 
             return query.trim();
         }
@@ -298,11 +318,11 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
         try {
             const { table_name = "", columns = {}, primary_key = "" } = schema;
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const columns_condition_list            = QueryFormatterUtil.generateColumnsDefinitionClause(columns, primary_key, table_name, this.dialect_options);
             const column_sql_clause                 = columns_condition_list.join(", ")
 
-            const query = `CREATE TABLE ${sanitized_table_name} (${column_sql_clause});`;
+            const query = `CREATE TABLE ${full_table_name} (${column_sql_clause});`;
 
             return query.trim();
         }
@@ -314,9 +334,9 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
         try {
             const { table_name = "", columns = {}, primary_key = "" } = schema;
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
 
-            const query = `DROP TABLE IF EXISTS ${sanitized_table_name};`;
+            const query = `DROP TABLE IF EXISTS ${full_table_name};`;
 
             return query.trim();
         }
@@ -345,11 +365,11 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
 
             else if (before_column_name) { pos_clause = `BEFORE ${QueryFormatterUtil.escapeField(before_column_name, this.quote_char)}`; }
 
-            const sanitized_table_name              = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const col_definition_sql                = QueryFormatterUtil.generateColumnDefinition(column_name, column_definition, table_name, this.dialect_options);
             const column_sql_clause                 = col_definition_sql.join(" ");
 
-            const query = `ALTER TABLE ${sanitized_table_name} ADD COLUMN ${column_sql_clause} ${pos_clause};`;
+            const query = `ALTER TABLE ${full_table_name} ADD COLUMN ${column_sql_clause} ${pos_clause};`;
 
             return query.trim();
         }
@@ -361,10 +381,10 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
         try {
             const { table_name = "", columns = {} } = schema;
             const { column_name }           = input_params;
+            const full_table_name                   = this.applyDatabaseScope(table_name);
             const sanitized_column_name     = QueryFormatterUtil.escapeField(column_name, this.quote_char);
-            const sanitized_table_name      = QueryFormatterUtil.escapeField(table_name, this.quote_char);
 
-            const query = `ALTER TABLE ${sanitized_table_name} DROP COLUMN ${sanitized_column_name};`;
+            const query = `ALTER TABLE ${full_table_name} DROP COLUMN ${sanitized_column_name};`;
 
             return query.trim();
         }
@@ -388,13 +408,13 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
                 this.handleError("generateAddIndexQuery", `Index fields contain one or more invalid columns in table ${table_name}`);
             }
 
-            const sanitized_table_name      = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name           = this.applyDatabaseScope(table_name);
             const sanitized_field_names     = fields.map((field) => { return QueryFormatterUtil.escapeField(field, this.quote_char); });
             const sanitized_index_name      = QueryFormatterUtil.escapeField(`idx_${table_name}_${fields.join('_')}`, this.quote_char);
             const index_field_clause        = sanitized_field_names.join(", ");
             const unique_clause             = unique ? "UNIQUE" : "";
 
-            const query = `CREATE ${unique_clause} INDEX ${sanitized_index_name} ON ${sanitized_table_name} (${index_field_clause});`;
+            const query = `CREATE ${unique_clause} INDEX ${sanitized_index_name} ON ${full_table_name} (${index_field_clause});`;
 
             return query.trim();
         }
@@ -418,10 +438,10 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
                 this.handleError("generateAddIndexQuery", `Index fields contain one or more invalid columns in table ${table_name}`);
             }
 
-            const sanitized_table_name      = QueryFormatterUtil.escapeField(table_name, this.quote_char);
+            const full_table_name           = this.applyDatabaseScope(table_name);
             const sanitized_index_name      = QueryFormatterUtil.escapeField(`idx_${table_name}_${fields.join('_')}`, this.quote_char);
 
-            const query = `DROP INDEX ${sanitized_index_name} ON ${sanitized_table_name};`;
+            const query = `DROP INDEX ${sanitized_index_name} ON ${full_table_name};`;
 
             return query.trim();
         } catch (error: unknown) {
@@ -429,8 +449,17 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
         }
     }
 
+    // Method to switch to a particular database
+    public generateUseDatabaseQuery = (database_name: string): string => {
+        try {
+            const sanitized_database_name = QueryFormatterUtil.sanitizeInput(database_name, "database_name");
 
+            const query = `USE \`${sanitized_database_name}\`;`;
 
+            return query;
+        }
+        catch (error: unknown) { this.handleError("generateSwitchDatabaseQuery", error); }
+    }
 
 }
 
