@@ -12,7 +12,7 @@ interface BaseSQLAdmin {
     createNewUser(input_params: CreateDatabaseUserParams): Promise<boolean>;
     deleteUser(input_params: CreateDatabaseUserParams): Promise<boolean>;
 
-    createTableInDatabase(schema: SchemaDefinitionInterface): Promise<boolean>;
+    createTableInDatabase(database_name: string, schema: SchemaDefinitionInterface): Promise<boolean>;
 
     grantUserPriviledges(input_params: GrantDatabaseUserPriviledgeParams): Promise<boolean>;
     revokeUserPriviledges(input_params: GrantDatabaseUserPriviledgeParams): Promise<boolean>;

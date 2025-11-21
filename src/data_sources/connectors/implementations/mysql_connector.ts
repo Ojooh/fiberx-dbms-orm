@@ -72,7 +72,8 @@ class MySQLConnector implements BaseSQLConnector {
                     throw new Error(`Failed to create Database ${database_params}`)
                 }
 
-                this.logger.success(`Database ${database} created sucessfully`)
+                this.logger.success(`Database ${database} created sucessfully`);
+                this.query_builder.setDatabase(database);
             }
 
             return true;
@@ -94,6 +95,7 @@ class MySQLConnector implements BaseSQLConnector {
             if("release" in connection_to_terminate) { connection_to_terminate.release() } else { await connection_to_terminate.end(); }
 
             this.pools.delete(connection_id);
+            this.query_builder.setDatabase(null);
             this.logger.success(`[${this.module_name}] Disconnected "${connection_id}" successfully.`);
 
             return true;
