@@ -10,6 +10,7 @@ import BaseSQLAdmin from "../base_sql_admin";
 import BaseSQLConnector from "../../connectors/base_sql_connector";
 import LoggerUtil from "../../../utils/logger_util";
 import SQLQueryBuilder from "../../../query_builders/base_sql_query_builder";
+import { SchemaDefinitionInterface } from "../../../types/model_type";
 
 class SQLAdmin implements BaseSQLAdmin {
     private readonly module_name: string;
@@ -76,6 +77,45 @@ class SQLAdmin implements BaseSQLAdmin {
             return executed ? true : false;
         }
         catch (error: unknown) { return this.handleError( "deleteUser", error); }
+    }
+
+    // Method to create a new table under a databse
+    public createTableInDatabase = async (schema: SchemaDefinitionInterface): Promise<boolean> => {
+        try {
+            const { table_name, app_id, indexes } = schema;
+
+            const table_sql_query = this.query_builder.generateCreateTableQuery(schema);
+
+            this.logger.info(`[${this.module_name}] Creating table '${table_name}' for app '${app_id}' with query: ${table_sql_query}`);
+
+            const { success: executed } = await this.connection_manager.executeQuery(table_sql_query);
+
+            if(!executed) {
+                this.logger.error(`[${this.module_name}] Failed to create table '${table_name}' for app '${app_id}'`);
+                return false;
+            }
+
+            this.logger.info(`[${this.module_name}] Successfully created table '${table_name}' for app '${app_id}'`);
+            this.logger.info(`[${this.module_name}] Creating indexes for table '${table_name}'`);
+
+            for (let index of indexes || []) {
+                const index_sql_query = this.query_builder.generateAddIndexQuery(index, schema);
+
+                this.logger.info(`[${this.module_name}] Creating index of fields '${index?.fields.join(", ")}' for table '${table_name}' with query: ${index_sql_query}`);
+
+                const { success: index_executed } = await this.connection_manager.executeQuery(index_sql_query);
+
+                if(!index_executed) {
+                    this.logger.error(`[${this.module_name}] Failed to create index of fields '${index?.fields.join(", ")}'  for table '${table_name}'`);
+                    return false;
+                }
+
+                this.logger.info(`[${this.module_name}] Successfully created index of fields '${index?.fields.join(", ")}'  for table '${table_name}'`);
+            }
+
+            return true
+        }
+        catch (error: unknown) { return this.handleError( "createTableInDatabase", error); }
     }
 
     // Method to grant user priviledges

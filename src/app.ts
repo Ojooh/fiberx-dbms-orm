@@ -13,6 +13,7 @@ import LoggerUtil from "./utils/logger_util";
 import EventSystemUtil from "./utils/event_system_util";
 import GlobalVariableManager from "./utils/global_variable_manager_util";
 import QueryCacheManagerUtil from "./utils/query_cache_manager_util"; 
+import SQLRawUtil from "./utils/sql_raw_util";
 
 // === Scripts ===
 import ModelGenerator from "./generators/model_generator";
@@ -47,6 +48,7 @@ const Fiberx = {
   LoggerUtil,
   EventSystemUtil,
   GlobalVariableManager,
+  SQLRawUtil,
 
   ModelGenerator,
   MigrationGenerator,

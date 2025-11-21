@@ -4,7 +4,13 @@ export interface CreateDatabaseParams { database_name: string; collation?: strin
 
 export interface CreateDatabaseUserParams { host?: string; username: string; password?: string }
 
-export interface GrantDatabaseUserPriviledgeParams {  username: string; database_name: string; table_name?: string; permissions: string[]; host?: string; }
+export interface GrantDatabaseUserPriviledgeParams {  
+    username: string; 
+    database_name: string; 
+    table_name?: string; 
+    permissions: string[]; 
+    host?: string; 
+}
 
 export type SQLDialect = "mysql" | "postgres" | "sqlite";
 
