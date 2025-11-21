@@ -97,6 +97,7 @@ class SQLAdmin implements BaseSQLAdmin {
 
             this.logger.info(`[${this.module_name}] Successfully created table '${table_name}' for app '${app_id}'`);
             this.logger.info(`[${this.module_name}] Creating indexes for table '${table_name}'`);
+            const drop_table_query = this.query_builder.generateDropTableQuery(schema);
 
             for (let index of indexes || []) {
                 const index_sql_query = this.query_builder.generateAddIndexQuery(index, schema);
@@ -106,7 +107,8 @@ class SQLAdmin implements BaseSQLAdmin {
                 const { success: index_executed } = await this.connection_manager.executeQuery(index_sql_query);
 
                 if(!index_executed) {
-                    this.logger.error(`[${this.module_name}] Failed to create index of fields '${index?.fields.join(", ")}'  for table '${table_name}'`);
+                    const {success: table_dropped } = await this.connection_manager.executeQuery(drop_table_query);
+                    this.logger.error(`[${this.module_name}] Failed to create index of fields '${index?.fields.join(", ")}'  for table '${table_name}', Table drooped status on cleanup: ${table_dropped}`);
                     return false;
                 }
 
