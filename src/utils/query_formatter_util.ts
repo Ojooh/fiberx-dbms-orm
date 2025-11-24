@@ -295,7 +295,12 @@ class QueryFormatterUtil {
     }
    
     // Method to return includes clause array
-    public static generateIncludesClause(includes: IncludeQuery[], table_name: string, dialect_options: DialectOptions): { fields_clause: string[], join_clause: string[] }  {
+    public static generateIncludesClause(
+        includes: IncludeQuery[], 
+        table_name: string, 
+        dialect_options: DialectOptions,
+        database_name: string | null = null
+    ): { fields_clause: string[], join_clause: string[] }  {
         const fields_clause: string[]   = [];
         const join_clause: string[]     = [];
 
@@ -309,10 +314,12 @@ class QueryFormatterUtil {
             let sub_fields: string[]   = [];
             let sub_joins: string[]     = [];
 
-            const { 
+            let { 
                 target_table_name, foreign_key, target_key, target_fields = ["*"], target_alias, target_is_required,
                 target_where, association_type, includes: nested_includes
             } = include_query_obj
+
+            target_table_name = database_name ? `${database_name}.${target_table_name}` : target_table_name
 
             if (['hasOne', 'belongsTo'].includes(association_type)) {
                 const input_params = { 

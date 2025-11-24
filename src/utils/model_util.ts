@@ -202,7 +202,11 @@ class ModelUtil {
     }
 
     // Method to validate  includes
-    private static validateIncludes(associations: AssociationDefinition[], table_name: string, includes: IncludeMeta[] ): { v_state: boolean; v_msg: string; v_data?: IncludeQuery[] } {
+    private static validateIncludes(
+        associations: AssociationDefinition[], 
+        table_name: string,
+        includes: IncludeMeta[] 
+    ): { v_state: boolean; v_msg: string; v_data?: IncludeQuery[] } {
         const includes_query_obj = [];
 
         for (const include_obj of includes) {

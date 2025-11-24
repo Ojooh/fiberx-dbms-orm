@@ -210,7 +210,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             const select_fields_list                = QueryFormatterUtil.generateFieldsCluase(fields, table_name, this.quote_char);
             const where_condition_list              = where ? QueryFormatterUtil.generateWhereClause(where, table_name, this.quote_char, this.like_op) : [""];
             const extra_condition_list              = QueryFormatterUtil.generateOptionsClause({ order_by, order_direction, limit, offset, lock }, table_name, this.quote_char);
-            const { fields_clause, join_clause }    = QueryFormatterUtil.generateIncludesClause(includes, table_name, this.dialect_options);
+            const { fields_clause, join_clause }    = QueryFormatterUtil.generateIncludesClause(includes, table_name, this.dialect_options, this.database_name);
 
             const all_fields_clause                 = [...distinct_list, ...select_fields_list, ...fields_clause].filter(Boolean).join(", ");
             const joins_clause                      = join_clause.filter(Boolean).join(" ");
@@ -237,7 +237,7 @@ class MySQLQueryBuilder implements BaseSQLQueryBuilder {
             const distinct_list                     = distinct ? ["DISTINCT"] : [""];
             const where_condition_list              = where ? QueryFormatterUtil.generateWhereClause(where, table_name, this.quote_char, this.like_op) : [""];
             const extra_condition_list              = QueryFormatterUtil.generateOptionsClause({ order_by, order_direction, limit, offset, lock }, table_name, this.quote_char);
-            const { fields_clause, join_clause }    = QueryFormatterUtil.generateIncludesClause(includes, table_name, this.dialect_options);
+            const { fields_clause, join_clause }    = QueryFormatterUtil.generateIncludesClause(includes, table_name, this.dialect_options, this.database_name);
 
             const all_fields_clause                 = [...distinct_list,  ...["COUNT(*) as count"]].filter(Boolean).join(", ");
             const joins_clause                      = join_clause.filter(Boolean).join(" ");
