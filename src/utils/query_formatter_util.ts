@@ -139,7 +139,7 @@ class QueryFormatterUtil {
             where_clause += ` AND (${where_condition})`;
         }
 
-        const join_clause  = [`${type} JOIN ${this.escapeField(target_table_name, quote_char)} AS ${this.escapeField(alias, quote_char)} ON ${where_clause}`];
+        const join_clause  = [`${type} JOIN ${this.escapeQualifiedField(target_table_name, quote_char)} AS ${this.escapeField(alias, quote_char)} ON ${where_clause}`];
 
         return { fields_clause, join_clause };
     }
@@ -166,7 +166,7 @@ class QueryFormatterUtil {
 
         const sub_query = [`(
             SELECT ${json_agg_fn}(${json_fn}(${key_value_pairs}))
-            FROM ${this.escapeField(target_table_name, quote_char)} AS ${this.escapeField(sub_alias, quote_char)}
+            FROM ${this.escapeQualifiedField(target_table_name, quote_char)} AS ${this.escapeField(sub_alias, quote_char)}
             WHERE ${where_clause}
         ) AS ${this.escapeField(alias_name)}`];
 
@@ -306,8 +306,6 @@ class QueryFormatterUtil {
 
         const { quote_char, json_agg_fn, json_fn } = dialect_options;
 
-        const quatted_db_name = database_name ? this.escapeField(database_name, quote_char) : null;
-
         if(!includes || !Array.isArray(includes) || !includes.length) {
             return { fields_clause, join_clause };
         }
@@ -321,7 +319,7 @@ class QueryFormatterUtil {
                 target_where, association_type, includes: nested_includes
             } = include_query_obj
 
-            target_table_name = quatted_db_name ? `${quatted_db_name}.${this.escapeField(target_table_name, quote_char)}` : target_table_name
+            target_table_name = database_name ? `${database_name}.${table_name}}` : target_table_name
 
             if (['hasOne', 'belongsTo'].includes(association_type)) {
                 const input_params = { 
